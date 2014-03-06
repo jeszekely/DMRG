@@ -1,0 +1,28 @@
+Matrix:
+	Members: 
+		nrows
+		ncols
+		values/array (ptr)
+
+	Functions:
+		lookup(ii,jj)
+		*/*= (mkl)
+		+/+= 
+		SVD/EigenvalueDecomp (mkl)
+		Trace
+		isValid		
+		checkHermitian
+		*sparsify
+		Constructor
+		Destructor
+		Move
+		Copy
+
+*Tensor(Matrix):
+	Members:
+		ndim
+		dimsize[]
+		
+	Functions:
+		reduceDimension
+		lookup
