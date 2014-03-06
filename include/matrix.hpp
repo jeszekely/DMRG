@@ -1,73 +1,86 @@
-using namespace std; 
+#include <memory>
 
 template <typename T> class matrix
 {
-public:
+protected:
 	int nrows, ncols;
-	T *vals;
-	
-// 	Constructor
-	matrix(int nr, int nc)
+	std::unique_ptr<T[]> vals;
+
+public:
+  // 	Constructor
+	matrix(int nr, int nc) : nrows(nr), ncols(nc), vals(std::unique_ptr<T[]>(new T[nc*nr]))
 	{
-		nrows 	= nr; 
-		ncols 	= nc; 
-		vals 	= new T [nc*nr]; 
-		
-//	zero all elements initially
-		for (int ii = 0; ii < ncols*nrows; ii++)
-		{
-			vals[ii] = (T)0.0; 
-		}
+    zero();
 	};
 
-//	get a value
+  matrix(const matrix& o) : nrows(o.nrows), ncols(o.ncols), vals(std::unique_ptr<T[]>(new T[nrows*ncols])) {
+    std::copy_n(o.vals.get(), nrows*ncols, vals.get());
+  }
+
+  matrix(matrix&& o) : nrows(o.nrows), ncols(o.ncols), vals(std::move(o.vals)) { }
+
+  void zero() {
+    std::fill_n(vals.get(), nrows*ncols, T(0.0));
+  }
+
+  T& element(const int row, const int col) {
+    return vals[col + row*ncols];
+  }
+
+  const T& element(const int row, const int col) const {
+    return vals[col + row*ncols];
+  }
+
+  T& operator()(const int row, const int col) {
+    return element(row,col);
+  }
+
+  const T& operator()(const int row, const int col) const {
+    return vals[col + row*ncols];
+  }
+
+  //	get a value
 	T get(int row, int col)
 	{
-		return vals[col + row*ncols]; 
-	};
-		
-//	set a particular value
-	int set(int row, int col, T val)
-	{
-		vals[col+row*ncols] = val; 
-		return 0; 
+		return vals[col + row*ncols];
 	};
 
-//	Set only diagonal elements to unity
+  //	set a particular value
+	int set(int row, int col, T val)
+	{
+		vals[col+row*ncols] = val;
+		return 0;
+	};
+
+  //	Set only diagonal elements to unity
 	void makeIdentity()
 	{
-		for (int ii = 0; ii < min(ncols,nrows); ii++)
+		for (int ii = 0; ii < std::min(ncols,nrows); ii++)
 		{
-			vals[ii+ii*ncols] = (T)1.0; 
+			vals[ii+ii*ncols] = (T)1.0;
 		}
 	};
 
 	void printMatrix()
 	{
-		for (int col = 0; col < min(10,nrows); col++)
+		for (int col = 0; col < std::min(10,nrows); col++)
 		{
-			for (int row = 0; row < min(10,ncols); row++)
+			for (int row = 0; row < std::min(10,ncols); row++)
 			{
-//				cout << this->get(row,col) << " "; 
-				cout << "(" << row << " " << col << " " << this->get(row,col) << ")" << " "; 
+//				cout << this->get(row,col) << " ";
+				std::cout << "(" << row << " " << col << " " << get(row,col) << ")" << " ";
 			}
-			cout << endl;
+			std::cout << std::endl;
 		}
-	};
-
-// 	Destructor
-	~matrix()
-	{
-		delete [] vals; 
 	};
 
 	// 	Move
 	// 	Copy
 	// 	*/*= (mkl);
-	// 	+/+= 
+	// 	+/+=
 	// 	SVD/EigenvalueDecomp (mkl)
 	// 	Trace
-	// 	isValid		
+	// 	isValid
 	// 	checkHermitian
 	// 	*sparsify
 
