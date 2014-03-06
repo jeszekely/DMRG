@@ -1,4 +1,5 @@
 #include <memory>
+#include <algorithm>
 
 template <typename T> class matrix
 {
