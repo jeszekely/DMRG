@@ -2,7 +2,7 @@ using namespace std;
 
 template <typename T> class matrix
 {
-private:
+public:
 	int nrows, ncols;
 	T *vals;
 	
@@ -21,15 +21,15 @@ private:
 	};
 
 //	get a value
-	T get(int ii, int jj)
+	T get(int row, int col)
 	{
-		return vals[jj + ii*ncols]; 
+		return vals[col + row*ncols]; 
 	};
 		
 //	set a particular value
-	int set(int ii, int jj, T val)
+	int set(int row, int col, T val)
 	{
-		vals[jj+ii*ncols] = val; 
+		vals[col+row*ncols] = val; 
 		return 0; 
 	};
 
@@ -44,18 +44,19 @@ private:
 
 	void printMatrix()
 	{
-		for (int ii = 0; ii < min(6,ncols); ii++)
+		for (int col = 0; col < min(10,nrows); col++)
 		{
-			for (int jj = 0; jj < min(6,nrows); jj++)
+			for (int row = 0; row < min(10,ncols); row++)
 			{
-				cout << this->get(ii,jj) << " "; 
+//				cout << this->get(row,col) << " "; 
+				cout << "(" << row << " " << col << " " << this->get(row,col) << ")" << " "; 
 			}
 			cout << endl;
 		}
-	}
+	};
 
 // 	Destructor
-	void ~matrix()
+	~matrix()
 	{
 		delete [] vals; 
 	};
@@ -69,11 +70,6 @@ private:
 	// 	isValid		
 	// 	checkHermitian
 	// 	*sparsify
-
-protected:
-
-	matrix(arguments);
-	~matrix();
 
 
 	/* data */
