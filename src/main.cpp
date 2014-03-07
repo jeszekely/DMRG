@@ -27,7 +27,7 @@ typedef std::complex<double> cplx;
 
 int main(int argc, char const *argv[])
 {
-	matrix <float> M(5,6); 
+	matrixBase <float> M(5,6); 
 	M.printMatrix();
 	M.makeIdentity(); 
 	std::cout << endl; 

@@ -3,27 +3,27 @@
 #include <iostream>
 #include <iomanip>
 
-template <typename T> class matrix
+template <typename T> class matrixBase
 {
 protected:
-    int nrows, ncols;
+    size_t nrows, ncols;
     std::unique_ptr<T[]> vals;
 
 public:
 //  Constructor
-    matrix(int nr, int nc) : nrows(nr), ncols(nc), vals(std::unique_ptr<T[]>(new T[nc*nr]))
+    matrixBase(const int nr, const int nc) : nrows(nr), ncols(nc), vals(std::unique_ptr<T[]>(new T[nc*nr]))
     {
         zero();
     }
 
 //  Copy Constructor
-    matrix(const matrix& o) : nrows(o.nrows), ncols(o.ncols), vals(std::unique_ptr<T[]>(new T[nrows*ncols])) 
+    matrixBase(const matrixBase& o) : nrows(o.nrows), ncols(o.ncols), vals(std::unique_ptr<T[]>(new T[nrows*ncols])) 
     {
         std::copy_n(o.vals.get(), nrows*ncols, vals.get());
     }
 
 //  Move Constructor
-    matrix(matrix&& o) : nrows(o.nrows), ncols(o.ncols), vals(std::move(o.vals)) { };
+    matrixBase(matrixBase&& o) : nrows(o.nrows), ncols(o.ncols), vals(std::move(o.vals)) { };
 
 //  Fill with zeroes
     void zero() 
@@ -55,18 +55,17 @@ public:
 //  Set only diagonal elements to unity
     void makeIdentity()
     {
+        zero();
         for (int ii = 0; ii < std::min(ncols,nrows); ii++)
-        {
             vals[ii+ii*ncols] = T(1.0);
-        }
     }
 
 //  Print a small portion for error checking
-    void printMatrix()
+    void printMatrix() const
     {
-        for (int row = 0; row < std::min(10,nrows); row++)
+        for (int row = 0; row < std::min(10,int(nrows)); row++)
         {
-            for (int col = 0; col < std::min(10,ncols); col++)
+            for (int col = 0; col < std::min(10,int(ncols)); col++)
             {
               std::cout << std::setprecision(2) << element(row,col) << " ";
             }
@@ -78,23 +77,22 @@ public:
     T trace()
     {
         T sum = T(0.0); 
-        for (int ii = 0; ii < std::min(ncols,nrows); ii++)
-        {
+        for (int ii = 0; ii < std::min(int(ncols),int(nrows)); ii++) 
             sum += element(ii,ii); 
-        }
         return sum; 
     }
 
-    //  */*= (mkl);
-    //  +/+=
-    //  SVD/EigenvalueDecomp (mkl)
-    //  Trace
-    //  isValid
-    //  checkHermitian
-    //  *sparsify
+    //  +/+=, -/-=
 
-
-    /* data */
 };
 
+class matrixReal : public matrixBase<double> 
+{
+public:
+    matrixReal(const int nr, const int nc); 
+    matrixReal(const matrixReal&); 
+    matrixReal(matrixReal&&); 
+};
+
+//class matrixComplex
 
