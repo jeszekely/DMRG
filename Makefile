@@ -1,17 +1,17 @@
 
 # Makefile
 
-CC = icpc
+CC = g++
 
-MKLROOT = /opt/intel/composer_xe_2013_sp1/mkl
+#MKLROOT = /opt/intel/composer_xe_2013_sp1/mkl
 
-CFLAGS = -g -debug -O2 -openmp -I$(MKLROOT)/include -mkl
+CFLAGS = -O2 -I$(MKLROOT)/include -std=c++11 -openmp
 
 BOOST_INC = -I/opt/local/include/
 
 OBJ  =   obj/main.o  obj/matrix.o  
 
-LIBS = -lm
+LIBS =  -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -lmkl_sequential -lpthread -lm 
 
 HEADS =  include/matrix.hpp
 BIN  =   DMRG
