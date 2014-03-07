@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
+#include <assert.h>
 
 template <typename T> class matrixBase
 {
@@ -26,7 +27,7 @@ public:
     matrixBase(matrixBase&& o) : nrows(o.nrows), ncols(o.ncols), vals(std::move(o.vals)) { };
 
 //  Fill with zeroes
-    void zero() 
+    void zero()
     {
         std::fill_n(vals.get(), nrows*ncols, T(0.0));
     }
@@ -76,22 +77,39 @@ public:
 //  Compute the trace
     T trace()
     {
-        T sum = T(0.0); 
-        for (int ii = 0; ii < std::min(int(ncols),int(nrows)); ii++) 
-            sum += element(ii,ii); 
-        return sum; 
+        T sum = T(0.0);
+        for (int ii = 0; ii < std::min(int(ncols),int(nrows)); ii++)
+            sum += element(ii,ii);
+        return sum;
     }
 
-    //  +/+=, -/-=
+    matrixBase& operator+=(const matrixBase& o)
+    {
+        assert(nrows == o.nrows);
+        assert(ncols == o.ncols);
+        for (int ii = 0; ii < ncols*nrows; ii++)
+            vals[ii] += o.vals[ii];
+        return *this; 
+    }
+
+    matrixBase& operator-=(const matrixBase& o)
+    {
+        assert(nrows == o.nrows);
+        assert(ncols == o.ncols);
+        for (int ii = 0; ii < ncols*nrows; ii++)
+            vals[ii] -= o.vals[ii];
+        return *this; 
+    }
+    //  +, -/-=
 
 };
 
-class matrixReal : public matrixBase<double> 
+class matrixReal : public matrixBase<double>
 {
 public:
-    matrixReal(const int nr, const int nc); 
-    matrixReal(const matrixReal&); 
-    matrixReal(matrixReal&&); 
+    matrixReal(const int nr, const int nc);
+    matrixReal(const matrixReal&);
+    matrixReal(matrixReal&&);
 };
 
 //class matrixComplex

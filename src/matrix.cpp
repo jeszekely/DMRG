@@ -19,7 +19,7 @@ matrixReal::matrixReal(const int nr, const int nc) : matrixBase<double>(nr,nc){}
 matrixReal::matrixReal(const matrixReal& o) : matrixBase<double>(o){}
 matrixReal::matrixReal(matrixReal&& o ) : matrixBase<double>(std::move(o)){}
 
- //  */*= (mkl);
+ 	//  */*= (mkl);
     //  SVD/EigenvalueDecomp (mkl)
     //  isValid
     //  checkHermitian

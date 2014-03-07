@@ -36,5 +36,7 @@ int main(int argc, char const *argv[])
 	M(2,1) = 10.0; 
 	M.printMatrix();
 	std::cout << "The trace is " << M.trace() << endl; 
+	M+=M; 
+	M.printMatrix(); 
 	return 0;
 }
