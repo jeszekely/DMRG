@@ -110,6 +110,7 @@ public:
     matrixReal(const int nr, const int nc);
     matrixReal(const matrixReal&);
     matrixReal(matrixReal&&);
+    matrixReal& operator*=(const matrixReal&);
 };
 
 //class matrixComplex
