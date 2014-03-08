@@ -26,6 +26,12 @@ public:
 //  Move Constructor
     matrixBase(matrixBase&& o) : nrows(o.nrows), ncols(o.ncols), vals(std::move(o.vals)) { };
 
+//  Access functions
+    size_t size() const { return nrows * ncols; }
+
+    T* data() { return vals.get(); }
+    const T* data() const { return vals.get(); }
+
 //  Fill with zeroes
     void zero()
     {
@@ -110,6 +116,8 @@ public:
     matrixReal(const int nr, const int nc);
     matrixReal(const matrixReal&);
     matrixReal(matrixReal&&);
+    matrixReal& operator=(const matrixReal&);
+    matrixReal operator*(const matrixReal&) const;
     matrixReal& operator*=(const matrixReal&);
 };
 
