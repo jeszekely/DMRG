@@ -27,18 +27,21 @@ typedef std::complex<double> cplx;
 
 int main(int argc, char const *argv[])
 {
-	matrixReal M(6,6); 
-	M.printMatrix();
-	M.makeIdentity(); 
-	std::cout << endl; 
-	M.printMatrix();
-	std::cout << endl; 
-	M(2,1) = 10.0; 
-	M.printMatrix();
-	std::cout << "The trace is " << M.trace() << endl; 
-	M+=M; 
-	M.printMatrix(); 
-  M*=M;
-  M.printMatrix();
+	matrixReal M(5,6);
+	M.makeIdentity();
+	M(2,1) = 10.0;
+
+	matrixReal N(6,2);
+	N.makeIdentity();
+	N(4,1) = -3.0;
+	N(2,0) = -20.0;
+
+	cout << M << N;
+
+	matrixReal O = M*N;
+	cout << O;
+
+	matrixReal Q = N-N*2.0;
+	cout << Q;
 	return 0;
 }
