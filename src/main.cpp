@@ -52,7 +52,7 @@ int main(int argc, char const *argv[])
 	R(4,0) = 3.0;
 	cout << R;
 	double *vals = new double [8];
-	R.diagonalize(vals);
+  R.diagonalize(vals);
 	cout << R;
 	return 0;
 }

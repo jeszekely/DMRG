@@ -102,13 +102,10 @@ void matrixReal::diagonalize(double* eigVals)
   double wkopt;
   dsyev_("V", "U", nrows, data(), nrows, eigVals, &wkopt, lwork, info);
   lwork = int(wkopt);
-  std::unique_ptr <double[]> work (new double [lwork*sizeof(double)]);
+  std::unique_ptr <double[]> work (new double [lwork]);
   dsyev_("V", "U", nrows, data(), nrows, eigVals, work.get(), lwork, info);
   if (info > 0)
-  {
-    cout << "Error: Unable to diagonalize matrix" << endl;
-    exit(1);
-  }
+    throw std::runtime_error("Unable to diagonalize matrix");
 }
 
   //  Invert
