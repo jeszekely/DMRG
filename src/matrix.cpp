@@ -11,8 +11,8 @@
 #include <vector>
 #include <memory>
 
-#include "mkl.h"
 #include "matrix.hpp"
+#include "utilities.hpp"
 
 using namespace std;
 
@@ -36,25 +36,15 @@ matrixReal matrixReal::operator*(const matrixReal& o) const
 {
   assert(ncols == o.nrows);
   matrixReal out(nrows, o.ncols);
-    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-               nrows, o.ncols, o.nrows, 1.0, data(), o.nrows, o.data(), o.ncols, 0.0, out.data(), o.ncols);
+  dgemm_("N","N", nrows, o.ncols, o.nrows, 1.0, data(), nrows, o.data(), o.nrows, 0.0, out.data(), nrows);
   return out;
-
-  // const int m = nrows;
-  // const int k = ncols;
-  // const int n = o.ncols;
-  // double alpha = 1.0;
-  // double beta = 0.0;
-  // it'd probably still be better to have an overloaded function that takes care of all the converting to memory locations stuff
-  //dgemm("N", "N", &m, &n, &k, &alpha, data(), &m, o.data(), &n, &beta, out.data(), &m);
-
 }
 
 matrixReal matrixReal:: operator+(const matrixReal& o) const
 {
   assert(ncols == o.ncols && nrows == o.nrows);
   matrixReal out(nrows, o.ncols);
-  transform(data(), data()+size(), o.data(), out.data(), plus<double>()); 
+  transform(data(), data()+size(), o.data(), out.data(), plus<double>());
   return out;
 }
 
@@ -68,9 +58,8 @@ matrixReal matrixReal::operator-(const matrixReal& o) const
 {
   assert(ncols == o.ncols && nrows == o.nrows);
   matrixReal out(nrows, o.ncols);
-  transform(data(), data()+size(), o.data(), out.data(), minus<double>()); 
+  transform(data(), data()+size(), o.data(), out.data(), minus<double>());
   return out;
-
 }
 
 matrixReal& matrixReal::operator-=(const matrixReal& o)
@@ -86,8 +75,7 @@ matrixReal matrixReal::operator*(const double& a) const
   return out;
 }
 
-
-matrixReal& matrixReal::operator *= (const double& a)
+matrixReal& matrixReal::operator*=(const double& a)
 {
   scale(a);
   return *this;
@@ -100,17 +88,36 @@ matrixReal matrixReal::operator/(const double& a) const
   return out;
 }
 
-matrixReal& matrixReal::operator /= (const double& a)
+matrixReal& matrixReal::operator/=(const double& a)
 {
   scale(1.0/a);
   return *this;
 }
 
-    //  Determinant
-    //  Invert
-    //  Transpose / Hermitian Conjugate
-    //  SVD/EigenvalueDecomp (mkl)
-    //    separate eigenvalue function?
-    //  isValid
-    //  checkHermitian
-    //  *sparsify
+void matrixReal::diagonalize(double* eigVals)
+{
+  assert (nrows == ncols);
+  int info;
+  int lwork = -1;
+  double wkopt;
+  dsyev_("V", "U", nrows, data(), nrows, eigVals, &wkopt, lwork, info);
+  lwork = int(wkopt);
+  std::unique_ptr <double[]> work (new double [lwork*sizeof(double)]);
+  dsyev_("V", "U", nrows, data(), nrows, eigVals, work.get(), lwork, info);
+  if (info > 0)
+  {
+    cout << "Error: Unable to diagonalize matrix" << endl;
+    exit(1);
+  }
+}
+
+  //  Invert
+  //  kron product
+  //  Remove a row or column
+  //  Extract submatrix
+  //  Extract one row or column (derived from above)
+  //  Transpose / Hermitian Conjugate
+  //  SVD/EigenvalueDecomp (mkl)
+  //  separate eigenvalue function?
+  //  isValid
+  //  *sparsify

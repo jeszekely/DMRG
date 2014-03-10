@@ -12,7 +12,7 @@ OBJ  =   obj/main.o  obj/matrix.o
 
 LIBS =  -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -lmkl_sequential -lpthread -lm
 
-HEADS =  include/matrix.hpp
+HEADS =  include/matrix.hpp include/utilities.hpp
 BIN  =   DMRG
 
 RM = rm -f

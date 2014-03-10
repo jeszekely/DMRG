@@ -43,5 +43,16 @@ int main(int argc, char const *argv[])
 
 	matrixReal Q = N-N*2.0;
 	cout << Q;
+
+	matrixReal R(8,8);
+	R.makeIdentity();
+	R(3,4) = -2.0;
+	R(4,3) = -2.0;
+	R(0,4) = 3.0;
+	R(4,0) = 3.0;
+	cout << R;
+	double *vals = new double [8];
+	R.diagonalize(vals);
+	cout << R;
 	return 0;
 }
