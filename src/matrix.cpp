@@ -3,6 +3,7 @@
 #include <complex>
 #include <memory>
 #include <algorithm>
+#include <stdexcept>
 
 #include <iomanip>
 #include <cstdlib>
@@ -20,7 +21,8 @@ matrixReal::matrixReal(const int nr, const int nc) : matrixBase<double>(nr,nc){}
 matrixReal::matrixReal(const matrixReal& o) : matrixBase<double>(o){}
 matrixReal::matrixReal(matrixReal&& o ) : matrixBase<double>(std::move(o)){}
 
-matrixReal& matrixReal::operator=(const matrixReal& o) {
+matrixReal& matrixReal::operator=(const matrixReal& o)
+{
   assert(nrows == o.nrows && ncols == o.ncols);
   copy_n(o.data(), o.size(), data());
   return *this;
@@ -106,6 +108,13 @@ void matrixReal::diagonalize(double* eigVals)
   dsyev_("V", "U", nrows, data(), nrows, eigVals, work.get(), lwork, info);
   if (info > 0)
     throw std::runtime_error("Unable to diagonalize matrix");
+}
+
+matrixReal matrixReal::transpose() const
+{
+  matrixReal out(ncols,nrows);
+  mkl_domatcopy_("C","T",nrows,ncols,1.0,data(),nrows,out.data(),ncols);
+  return out;
 }
 
   //  Invert

@@ -81,7 +81,6 @@ public:
   {
     std::for_each(data(), data()+size(), [&a](T& p){p*=a;});
   }
-
   template <typename U> friend std::ostream &operator<<(std::ostream &out, const matrixBase <U> &o);
 };
 
@@ -111,6 +110,8 @@ public:
 //Diagonalize matrix, place eigenvalues in the vector prodived
 //NOTE: Assumes a symmetric matrix
   void diagonalize(double* eigVals);
+
+  matrixReal transpose() const;
 };
 
 //Overload the << operator to print a matrix
@@ -121,7 +122,7 @@ std::ostream &operator<<(std::ostream &out, const matrixBase <T> &o)
   {
     for (int col = 0; col < std::min(10,int(o.ncols)); col++)
     {
-      out << std::setprecision(2) << o(row,col) << " ";
+      out << std::setprecision(3) << o(row,col) << "\t";
     }
     out << "\n";
   }

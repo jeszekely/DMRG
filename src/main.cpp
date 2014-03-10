@@ -39,7 +39,7 @@ int main(int argc, char const *argv[])
 	cout << M << N;
 
 	matrixReal O = M*N;
-	cout << O;
+	cout << O << O.transpose();
 
 	matrixReal Q = N-N*2.0;
 	cout << Q;
