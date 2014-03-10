@@ -112,6 +112,8 @@ public:
   void diagonalize(double* eigVals);
 
   matrixReal transpose() const;
+
+  matrixReal svd();
 };
 
 //Overload the << operator to print a matrix

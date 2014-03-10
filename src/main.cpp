@@ -54,5 +54,8 @@ int main(int argc, char const *argv[])
 	double *vals = new double [8];
   R.diagonalize(vals);
 	cout << R;
+
+	cout << R.svd();
+
 	return 0;
 }

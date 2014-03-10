@@ -117,6 +117,41 @@ matrixReal matrixReal::transpose() const
   return out;
 }
 
+
+
+matrixReal matrixReal::svd()
+{
+  //Uses LAPACKE_dgesvd to get the singular value decomposition
+  //Right now returns 'data', which is modified by this function, 
+  //which is probably not what we want. Fix this.
+  
+
+  double * superb = new double [min(nrows,ncols)-1];  
+  lapack_int m = nrows, n = ncols;
+
+  matrixReal s(ncols,1);
+  matrixReal u(nrows,nrows);
+  matrixReal vt(ncols,ncols);
+
+  lapack_int ldu = nrows, ldvt = ncols, info, lwork, lda=nrows;  
+
+
+  info = LAPACKE_dgesvd( LAPACK_COL_MAJOR, 'A', 'A', nrows, ncols, data(), lda,  
+               s.data(), u.data(), ldu, vt.data(), ldvt, superb );
+ 
+ if( info > 0 ) {
+    printf( "The algorithm computing SVD failed to converge.\n" );
+    exit( 1 );
+  }  
+
+  //Can print out the SVD results if you want
+  cout << "Singular Values" << endl << s;
+  cout << "Left singular vectors (stored columnwise)" << endl << u;
+  cout << "Right singular vectors (stored rowwise)" << endl << vt;
+
+  return *this;
+}
+
   //  Invert
   //  kron product
   //  Remove a row or column
