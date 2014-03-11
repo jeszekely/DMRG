@@ -10,11 +10,11 @@ CFLAGS = -O2 -I$(MKLROOT)/include -Wall -Wno-sign-compare -Wno-unused-function -
 
 BOOST_INC = -I/opt/local/include/
 
-OBJ  =   obj/main.o  obj/matrix.o
+OBJ  =   obj/main.o  obj/matrix.o obj/dmrg.o
 
 LIBS =  -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -lmkl_sequential -lpthread -lm
 
-HEADS =  include/matrix.hpp include/utilities.hpp
+HEADS =  include/matrix.hpp include/utilities.hpp include/dmrg.hpp
 BIN  =   DMRG
 
 RM = rm -f
@@ -33,3 +33,6 @@ obj/main.o: src/main.cpp
 
 obj/matrix.o: src/matrix.cpp
 	$(CC) $(CFLAGS)  -c src/matrix.cpp  -o obj/matrix.o  -I./include
+
+obj/dmrg.o: src/dmrg.cpp
+	$(CC) $(CFLAGS)  -c src/dmrg.cpp  -o obj/dmrg.o  -I./include
