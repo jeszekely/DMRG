@@ -76,10 +76,10 @@ int main(int argc, char const *argv[])
   Sz1->element(1,1) = -0.5;
   block testBlock(1,2,H1, Sp1, Sz1);
   testBlock.enlarge(*H1, *Sp1, *Sz1);
-  cout << *testBlock.H;
-  cout << *testBlock.Sp;
-  cout << *testBlock.Sz;
+  cout << "Hamiltonian:" << endl << *testBlock.H;
+  cout << "Sp:" << endl << *testBlock.Sp;
+  cout << "Sz:" << endl << *testBlock.Sz;
 
-  
+
   return 0;
 }

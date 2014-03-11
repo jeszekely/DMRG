@@ -21,41 +21,35 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 	identMatrix.makeIdentity();
 
 	//construct 2x2 identity matrix - 2x2 is only appropriate for the spin system, change later for other systems
-	matrixReal smallIdent(2,2);
+	int singleSiteBasis = 2;
+	matrixReal smallIdent(singleSiteBasis,singleSiteBasis);
 	smallIdent.makeIdentity();
 
-	//I know this is ugly - don't judge me!
 	
 	//antiferromagnetic case
 	double J = 1;
 	double Jz = 1;
 
-	std::shared_ptr<matrixReal> newH(new matrixReal (2*basisSize, 2*basisSize));
+	std::shared_ptr<matrixReal> newH(new matrixReal (singleSiteBasis*basisSize, singleSiteBasis*basisSize));
 	//See Chapter 2 The Density Matrix Renormalization Group (Adrian E. Feiguin) eq. 2.6, 2.8, 2.11
 	*newH = H->kron(smallIdent) //H x I_2
 						+ identMatrix.kron(H1)  //I_basisSize x H_1
 							+ (Sp->kron(*Sp1.transpose()) //Sp x Sp1^(*t)
 								+ (Sp->transpose())->kron(Sp1))*(J/2.) //Sp^(*t) x Sp1
 									+(Sz->kron(Sz1))*Jz; //Sz x Sz1 * Jz
-	// std::cout << (H->kron(smallIdent)); //H x I_2
-	// std::cout << (identMatrix.kron(H1));  //I_basisSize x H_1
-	// std::cout << *Sp;
-	// std::cout << *Sp1.transpose();
-	// std::cout << (Sp->kron(*Sp1.transpose())*(J/2.)); //Sp x Sp1^(*t)
-	// std::cout << (Sp->transpose())->kron(Sp1)*(J/2.); //Sp^(*t) x Sp1
-	// std::cout << ((Sz->kron(Sz1))*Jz); //Sz x Sz1 * Jz
-
 
 	//Scale up Sz and Sp to the proper size								
-  
-  	std::shared_ptr<matrixReal> newSz(new matrixReal (2*basisSize, 2*basisSize));
-	std::shared_ptr<matrixReal> newSp(new matrixReal (2*basisSize, 2*basisSize));
+  	std::shared_ptr<matrixReal> newSz(new matrixReal (singleSiteBasis*basisSize, singleSiteBasis*basisSize));
+	std::shared_ptr<matrixReal> newSp(new matrixReal (singleSiteBasis*basisSize, singleSiteBasis*basisSize));
 
 	*newSz = identMatrix.kron(*Sz);
 	*newSp = identMatrix.kron(*Sp);
+
+	//Transfer the data from the temporary pointers into the permanent variables in the block class
 	H=newH;
 	Sz=newSz;
 	Sp=newSp;
+
 	//We just added a new site, which also increases the basis
 	nSites+=1;
 	basisSize*=2;
