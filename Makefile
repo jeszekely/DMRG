@@ -6,7 +6,7 @@ CC = g++
 
 #MKLROOT = /opt/intel/composer_xe_2013_sp1/mkl
 
-CFLAGS = -O2 -I$(MKLROOT)/include -std=c++11 -openmp
+CFLAGS = -O2 -I$(MKLROOT)/include -Wall -Wno-sign-compare -Wno-unused-function -Werror -std=c++11 -openmp
 
 BOOST_INC = -I/opt/local/include/
 

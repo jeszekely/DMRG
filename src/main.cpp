@@ -52,16 +52,14 @@ int main(int argc, char const *argv[])
   cout << R;
   cout << R.getSub(1,1,4,4);
 
-
   vector <double> vals(8,0.0);
   R.diagonalize(vals.data());
   cout << R;
   vector <double> svd_vals(8,0.0);
-  tuple<shared_ptr<matrixReal>,shared_ptr<matrixReal>> S = R.svd(svd_vals);
-  matrixReal T = *get<0>(S);
-  matrixReal U = *get<1>(S);
-  cout << T << U;
-  T.setSub(1,0,O.transpose());
+  shared_ptr<matrixReal> T, U;
+  tie(T,U) = R.svd(svd_vals);
+  cout << *T << *U;
+  T->setSub(1,0,O.transpose());
   cout << T;
   return 0;
 }

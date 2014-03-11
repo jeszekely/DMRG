@@ -120,7 +120,7 @@ matrixReal matrixReal::transpose() const
 
 tuple<shared_ptr<matrixReal>, shared_ptr<matrixReal>> matrixReal::svd(vector<double>& s)
 {
-  assert(s.size() >= ncols);
+  assert(s.size() >= std::min(ncols,nrows));
   auto u = make_shared<matrixReal>(nrows, nrows);
   auto vT = make_shared<matrixReal>(ncols, ncols);
 
