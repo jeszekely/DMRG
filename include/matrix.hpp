@@ -101,7 +101,7 @@ public:
   template <typename U>
   void setSub(int r, int c, U o)
   {
-    assert(r + o.nrows < nrows && c + o.ncols < ncols);
+    assert(r + o.nrows <= nrows && c + o.ncols <= ncols);
     for (int ii = 0; ii < o.nrows; ii++)
     {
       for (int jj = 0; jj < o.ncols; jj++)
@@ -148,7 +148,7 @@ public:
 //Compute the kronecker product of two matrices
 //Note: This will be used as a shortcut to create a superblock matrix for small site matrices
 //This should NOT be used for larger systems as it is very memory intensive
-//  matrixReal kron(matrixReal &o);
+  matrixReal kron(matrixReal &o);
 };
 
 //Overload the << operator to print a matrix

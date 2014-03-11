@@ -137,10 +137,18 @@ tuple<shared_ptr<matrixReal>, shared_ptr<matrixReal>> matrixReal::svd(vector<dou
   return make_tuple(u,vT);
 }
 
-//matrixReal matrixReal::kron(matrixReal &o)
-//{
-// matrixReal out(nrows*o.nrows,ncols*o.ncols);
-//}
+matrixReal matrixReal::kron(matrixReal &o)
+{
+  matrixReal out(nrows*o.nrows,ncols*o.ncols);
+  for (int ii = 0; ii < nrows; ii++)
+  {
+    for (int jj = 0; jj < ncols; jj++)
+    {
+      out.setSub(ii*o.ncols,jj*o.nrows,o*element(ii,jj));
+    }
+  }
+  return out;
+}
 
   //  Remove a row or column
   //  Hermitian Conjugate
