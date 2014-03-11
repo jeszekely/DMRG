@@ -6,12 +6,12 @@ public:
 	int nSites; //chain/number of sites
 	int basisSize; //number of m's to keep
 	std::shared_ptr<matrixReal> H;
-	std::shared_ptr<matrixReal> JU;
-	std::shared_ptr<matrixReal> JL;
+	std::shared_ptr<matrixReal> Sp;
+	std::shared_ptr<matrixReal> Sz;
 	std::vector<matrixReal *> Ops; //operators for single site (initially)
 
 	block(int, int, std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>);
-	void enlarge(block &o);
+	void enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1);
 };
 
 int dmrgInfiniteSystem(block& system, int L, int m);

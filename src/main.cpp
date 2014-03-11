@@ -61,13 +61,25 @@ int main(int argc, char const *argv[])
   // cout << *T << *U;
   // T->setSub(1,0,O.transpose());
   // cout << T;
-  matrixReal H1(2,2);
-  matrixReal Sp1(2,2);
-  Sp1(0,1) = 1.0;
-  matrixReal Sz1(2,2);
-  Sz1(0,0) = 0.5;
-  Sz1(1,1) = -0.5;
+  // matrixReal H1(2,2);
+  // matrixReal Sp1(2,2);
+  // Sp1(0,1) = 1.0;
+  // matrixReal Sz1(2,2);
+  // Sz1(0,0) = 0.5;
+  // Sz1(1,1) = -0.5;
 
+  std::shared_ptr<matrixReal> H1(new matrixReal(2,2));
+  std::shared_ptr<matrixReal> Sp1(new matrixReal(2,2));
+  std::shared_ptr<matrixReal> Sz1(new matrixReal(2,2));
+  Sp1->element(0,1) = 1.0;
+  Sz1->element(0,0) = 0.5;
+  Sz1->element(1,1) = -0.5;
+  block testBlock(1,2,H1, Sp1, Sz1);
+  testBlock.enlarge(*H1, *Sp1, *Sz1);
+  cout << *testBlock.H;
+  cout << *testBlock.Sp;
+  cout << *testBlock.Sz;
 
+  
   return 0;
 }

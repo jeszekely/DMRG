@@ -111,10 +111,10 @@ void matrixReal::diagonalize(double* eigVals)
   return;
 }
 
-matrixReal matrixReal::transpose() const
+std::shared_ptr<matrixReal> matrixReal::transpose() const
 {
-  matrixReal out(ncols,nrows);
-  mkl_domatcopy_("C","T",nrows,ncols,1.0,data(),nrows,out.data(),ncols);
+  auto out = make_shared<matrixReal> (ncols,nrows);
+  mkl_domatcopy_("C","T",nrows,ncols,1.0,data(),nrows,out->data(),ncols);
   return out;
 }
 
@@ -137,7 +137,7 @@ tuple<shared_ptr<matrixReal>, shared_ptr<matrixReal>> matrixReal::svd(vector<dou
   return make_tuple(u,vT);
 }
 
-matrixReal matrixReal::kron(matrixReal &o)
+matrixReal matrixReal::kron(matrixReal &o) const
 {
   matrixReal out(nrows*o.nrows,ncols*o.ncols);
   for (int ii = 0; ii < nrows; ii++)

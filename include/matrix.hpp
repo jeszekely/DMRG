@@ -142,13 +142,15 @@ public:
 //Diagonalize matrix, place eigenvalues in the vector prodived
 //NOTE: Assumes a symmetric matrix
   void diagonalize(double* eigVals);
-  matrixReal transpose() const;
+  std::shared_ptr<matrixReal> transpose() const;
   std::tuple<std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>>svd(std::vector<double>&);
 
 //Compute the kronecker product of two matrices
 //Note: This will be used as a shortcut to create a superblock matrix for small site matrices
 //This should NOT be used for larger systems as it is very memory intensive
-  matrixReal kron(matrixReal &o);
+  matrixReal kron(matrixReal &o) const;
+
+
 };
 
 //Overload the << operator to print a matrix
