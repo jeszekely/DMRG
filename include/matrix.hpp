@@ -81,6 +81,37 @@ public:
   {
     std::for_each(data(), data()+size(), [&a](T& p){p*=a;});
   }
+
+//Extract a portion of the matrix starting at element(r,c), get (nr x nc matrix)
+  matrixBase <T> getSub(int r, int c, int nr, int nc) const
+  {
+    assert(r + nr < nrows && c + nc < ncols);
+    matrixBase <T> out(nr,nc);
+    for (int ii = 0; ii < nr; ii++)
+    {
+      for (int jj = 0; jj < nc; jj++)
+      {
+        out(ii,jj) = element(ii+r,jj+c);
+      }
+    }
+    return out;
+  }
+
+//Place matrix o at position (r,c)
+  template <typename U>
+  void setSub(int r, int c, U o)
+  {
+    assert(r + o.nrows < nrows && c + o.ncols < ncols);
+    for (int ii = 0; ii < o.nrows; ii++)
+    {
+      for (int jj = 0; jj < o.ncols; jj++)
+      {
+        element(ii+r,jj+c) = o(ii,jj);
+      }
+    }
+    return;
+  }
+
   template <typename U> friend std::ostream &operator<<(std::ostream &out, const matrixBase <U> &o);
 };
 
@@ -104,16 +135,20 @@ public:
 //Note: binary scalar operations only work as rhs operators at the moment
   matrixReal operator*(const double&) const;
   matrixReal operator/(const double&) const;
-  matrixReal& operator *= (const double&);
-  matrixReal& operator /= (const double&);
+  matrixReal& operator*=(const double&);
+  matrixReal& operator/=(const double&);
 
+//BLAS and LAPACK routines
 //Diagonalize matrix, place eigenvalues in the vector prodived
 //NOTE: Assumes a symmetric matrix
   void diagonalize(double* eigVals);
-
   matrixReal transpose() const;
-
   std::tuple<std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>>svd(std::vector<double>&);
+
+//Compute the kronecker product of two matrices
+//Note: This will be used as a shortcut to create a superblock matrix for small site matrices
+//This should NOT be used for larger systems as it is very memory intensive
+//  matrixReal kron(matrixReal &o);
 };
 
 //Overload the << operator to print a matrix

@@ -1,3 +1,5 @@
+# Density Matrix Renormalization Group (DMRG) Code
+# Authors J. Szekely, B. Ashwell and S. Parker
 # Makefile
 
 CC = g++

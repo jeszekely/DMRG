@@ -108,6 +108,7 @@ void matrixReal::diagonalize(double* eigVals)
   dsyev_("V", "U", nrows, data(), nrows, eigVals, work.get(), lwork, info);
   if (info > 0)
     throw std::runtime_error("Unable to diagonalize matrix");
+  return;
 }
 
 matrixReal matrixReal::transpose() const
@@ -136,9 +137,11 @@ tuple<shared_ptr<matrixReal>, shared_ptr<matrixReal>> matrixReal::svd(vector<dou
   return make_tuple(u,vT);
 }
 
-  //  Invert
-  //  kron product
+//matrixReal matrixReal::kron(matrixReal &o)
+//{
+// matrixReal out(nrows*o.nrows,ncols*o.ncols);
+//}
+
   //  Remove a row or column
-  //  Extract submatrix
   //  Hermitian Conjugate
   //  *sparsify
