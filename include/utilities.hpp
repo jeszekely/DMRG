@@ -12,6 +12,12 @@ extern "C"
   void dsyev_(const char*, const char*, const int*, double*, const int*, double*, double*, const int*, int*);
 }
 
+//LAPACK
+extern "C"
+{
+ void dgesvd_(const char*, const char*, const int*, const int*, double*, const int*, double*, double*, const int*, double*, const int*,  double*, const int*, int*);
+}
+
 //DMRG interface, shamelessly lifted from BAGEL's src/util/f77.h file
 namespace
 {
@@ -29,6 +35,9 @@ namespace
 	void dsyev_(const char* a, const char* b, const int c, std::unique_ptr<double []>& d, const int e,
              std::unique_ptr<double []>& f, std::unique_ptr<double []>& g, const int h, int& i)
              { ::dsyev_(a,b,&c,d.get(),&e,f.get(),g.get(),&h,&i);}
+
+  void dgesvd_(const char* a, const char* b, const int c, const int d, double* e, const int f, double* g, double* h, const int i, double* j, const int k,
+              double* l, const int m, int& n) { ::dgesvd_(a,b,&c,&d,e,&f,g,h,&i,j,&k,l,&m,&n); }
 }
 
 void mkl_domatcopy_(const char* ordering, const char* trans, const int r, const int c, const double alpha,

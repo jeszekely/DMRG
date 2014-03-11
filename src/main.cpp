@@ -13,7 +13,6 @@
 #include <vector>
 #include <memory>
 
-#include "mkl.h"
 #include "matrix.hpp"
 
 // #include <boost/algorithm/string.hpp>
@@ -51,11 +50,15 @@ int main(int argc, char const *argv[])
 	R(0,4) = 3.0;
 	R(4,0) = 3.0;
 	cout << R;
-	double *vals = new double [8];
-  R.diagonalize(vals);
-	cout << R;
 
-	cout << R.svd();
+	vector <double> vals(8,0.0);
+  R.diagonalize(vals.data());
+	cout << R;
+	vector <double> svd_vals(8,0.0);
+	tuple<shared_ptr<matrixReal>,shared_ptr<matrixReal>> S = R.svd(svd_vals);
+	matrixReal T = *get<0>(S);
+	matrixReal U = *get<1>(S);
+	cout << T << U;
 
 	return 0;
 }

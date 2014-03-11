@@ -117,48 +117,28 @@ matrixReal matrixReal::transpose() const
   return out;
 }
 
-
-
-matrixReal matrixReal::svd()
+tuple<shared_ptr<matrixReal>, shared_ptr<matrixReal>> matrixReal::svd(vector<double>& s)
 {
-  //Uses LAPACKE_dgesvd to get the singular value decomposition
-  //Right now returns 'data', which is modified by this function, 
-  //which is probably not what we want. Fix this.
-  
+  assert(s.size() >= ncols);
+  auto u = make_shared<matrixReal>(nrows, nrows);
+  auto vT = make_shared<matrixReal>(ncols, ncols);
 
-  double * superb = new double [min(nrows,ncols)-1];  
-  lapack_int m = nrows, n = ncols;
-
-  matrixReal s(ncols,1);
-  matrixReal u(nrows,nrows);
-  matrixReal vt(ncols,ncols);
-
-  lapack_int ldu = nrows, ldvt = ncols, info, lwork, lda=nrows;  
-
-
-  info = LAPACKE_dgesvd( LAPACK_COL_MAJOR, 'A', 'A', nrows, ncols, data(), lda,  
-               s.data(), u.data(), ldu, vt.data(), ldvt, superb );
- 
- if( info > 0 ) {
-    printf( "The algorithm computing SVD failed to converge.\n" );
-    exit( 1 );
-  }  
-
-  //Can print out the SVD results if you want
-  cout << "Singular Values" << endl << s;
-  cout << "Left singular vectors (stored columnwise)" << endl << u;
-  cout << "Right singular vectors (stored rowwise)" << endl << vt;
-
-  return *this;
+  int lwork = -1;
+  int info = 0;
+  dgesvd_("A","A", nrows, ncols, data(), nrows, s.data(), u->data(), nrows, vT->data(), ncols, s.data(), lwork, info);
+  lwork = s[0];
+  if (lwork <= 0)
+      throw runtime_error("dgesvd faied allocating lwork value");
+  unique_ptr<double[]> work(new double[lwork]);
+  dgesvd_("A","A", nrows, ncols, data(), nrows, s.data(), u->data(), nrows, vT->data(), ncols, work.get(), lwork, info);
+  if (info != 0)
+      throw runtime_error("dgesvd faied matrix decomposition");
+  return make_tuple(u,vT);
 }
 
   //  Invert
   //  kron product
   //  Remove a row or column
   //  Extract submatrix
-  //  Extract one row or column (derived from above)
-  //  Transpose / Hermitian Conjugate
-  //  SVD/EigenvalueDecomp (mkl)
-  //  separate eigenvalue function?
-  //  isValid
+  //  Hermitian Conjugate
   //  *sparsify

@@ -113,7 +113,7 @@ public:
 
   matrixReal transpose() const;
 
-  matrixReal svd();
+  std::tuple<std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>>svd(std::vector<double>&);
 };
 
 //Overload the << operator to print a matrix
