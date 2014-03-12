@@ -27,7 +27,7 @@ public:
   }
 
 //  Move Constructor
-  matrixBase(matrixBase&& o) : nrows(o.nrows), ncols(o.ncols), vals(std::move(o.vals)) {nrows = 0; ncols = 0;};
+  matrixBase(matrixBase&& o) : nrows(o.nrows), ncols(o.ncols), vals(std::move(o.vals)) { o.nrows = 0; o.ncols = 0; };
 
 //  Destructor
   ~matrixBase(){memSize -= sizeof(T)*size();} //number of bytes allocated to instance of class
