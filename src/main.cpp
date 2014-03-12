@@ -94,7 +94,10 @@ int main(int argc, char const *argv[])
   block sysBlock(1,2,sH1, sSp1, sSz1);
 
   block envBlock(1,2,eH1, eSp1, eSz1);
-  buildSuperblock(sysBlock, envBlock);
+  auto superBlock = buildSuperblock(sysBlock, envBlock);
+  cout << "First 10x10 of Superblock: " << endl << *superBlock << endl;
+
+  
 
   return 0;
 }

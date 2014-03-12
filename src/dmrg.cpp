@@ -60,7 +60,7 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 	return;
 }
 
-void buildSuperblock(block& sysBlock, block& envBlock)
+shared_ptr<matrixReal> buildSuperblock(block& sysBlock, block& envBlock)
 {
 
 	//Step 1, enlarge the system & the environment
@@ -102,9 +102,9 @@ void buildSuperblock(block& sysBlock, block& envBlock)
 							+(sysBlock.Sz->kron(*envBlock.Sz))*Jz; // ( sysSz x envSz ) Jz
 
 
-	cout << "First 10x10 of Superblock: " << endl << *superBlock << endl;
+	//cout << "First 10x10 of Superblock: " << endl << *superBlock << endl;
 
-	return;
+	return superBlock;
 }
 
 int dmrgInfiniteSystem(block& system, int L, int m)
