@@ -14,4 +14,6 @@ public:
 	void enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1);
 };
 
+void buildSuperblock(block& sysBlock, block& envBlock);
+
 int dmrgInfiniteSystem(block& system, int L, int m);

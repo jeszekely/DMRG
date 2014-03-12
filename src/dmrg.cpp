@@ -32,7 +32,8 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 	double J = 1;
 	double Jz = 1;
 
-	std::shared_ptr<matrixReal> newH(new matrixReal (singleSiteBasis*basisSize, singleSiteBasis*basisSize));
+	auto newH = make_shared<matrixReal>(singleSiteBasis*basisSize, singleSiteBasis*basisSize);
+
 	//See Chapter 2 The Density Matrix Renormalization Group (Adrian E. Feiguin) eq. 2.6, 2.8, 2.11
 	*newH = H->kron(smallIdent) //H x I_2
 						+ identMatrix.kron(H1)  //I_basisSize x H_1
@@ -43,7 +44,7 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 	//Scale up Sz and Sp to the proper size
 	auto newSz = make_shared<matrixReal>(singleSiteBasis*basisSize, singleSiteBasis*basisSize);
 	auto newSp = make_shared<matrixReal>(singleSiteBasis*basisSize, singleSiteBasis*basisSize);
-
+  	
 	*newSz = identMatrix.kron(*Sz);
 	*newSp = identMatrix.kron(*Sp);
 
@@ -55,6 +56,53 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 	//We just added a new site, which also increases the basis
 	nSites+=1;
 	basisSize*=2;
+
+	return;
+}
+
+void buildSuperblock(block& sysBlock, block& envBlock)
+{
+
+	//Step 1, enlarge the system & the environment
+	//this is a stupid way of doing things, but it's good enough for now
+	//build the initial matrices (H1, Sp1, Sz1) - these are used to expand the hamiltonian, and are not changed
+	auto H1 = make_shared<matrixReal>(2,2);
+
+	auto Sp1 = make_shared<matrixReal>(2,2);
+	Sp1->element(0,1) = 1.0;
+
+	auto Sz1 = make_shared<matrixReal>(2,2);
+	Sz1->element(0,0) = 0.5;
+	Sz1->element(1,1) = -0.5;
+
+	//It's quite likely that sysBlock and envBlock will be identical, but let's not force that to be the case
+
+	sysBlock.enlarge(*H1, *Sp1, *Sz1);
+	envBlock.enlarge(*H1, *Sp1, *Sz1);
+	cout << "System Block Basis Size: "<<sysBlock.basisSize << endl;
+	cout << "Environment Block Basis Size: "<<envBlock.basisSize << endl;
+
+
+	matrixReal sysIdent(sysBlock.basisSize,sysBlock.basisSize);
+	sysIdent.makeIdentity();
+	
+	matrixReal envIdent(envBlock.basisSize,envBlock.basisSize);
+	envIdent.makeIdentity();
+
+	//Step 2, make the superblock
+	auto superBlock = make_shared<matrixReal>(sysBlock.basisSize*envBlock.basisSize, sysBlock.basisSize*envBlock.basisSize);
+
+	//antiferromagnetic case
+	double J = 1;
+	double Jz = 1;
+
+	*superBlock = sysBlock.H->kron(envIdent) + envIdent.kron(*envBlock.H) //SysH x I_envSize + I_sysSize x EnvH
+					+(sysBlock.Sp->kron(*envBlock.Sp->transpose()))*J/2 //  ( sysSp x envSp*t ) * J/2 
+						+(sysBlock.Sp->transpose()->kron(*envBlock.Sp))*J/2 // ( sysSp*t x envSp) * J/2
+							+(sysBlock.Sz->kron(*envBlock.Sz))*Jz; // ( sysSz x envSz ) Jz
+
+
+	cout << "First 10x10 of Superblock: " << endl << *superBlock << endl;
 
 	return;
 }
