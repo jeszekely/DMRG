@@ -10,10 +10,12 @@
 #include "matrix.hpp"
 #include "dmrg.hpp"
 
+using namespace std;
+
 block::block(int ns, int bs, std::shared_ptr<matrixReal> h, std::shared_ptr<matrixReal> sp, std::shared_ptr<matrixReal> sz) : nSites(ns), basisSize(bs), H(h), Sp(sp), Sz(sz) {}
 
 void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
-{	
+{
 	//H1, Sz1, and Sp1 all refer to the original, 2x2 matrices. They should never change.
 
 	//construct identity matrix for upscaling stuff
@@ -25,7 +27,7 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 	matrixReal smallIdent(singleSiteBasis,singleSiteBasis);
 	smallIdent.makeIdentity();
 
-	
+
 	//antiferromagnetic case
 	double J = 1;
 	double Jz = 1;
@@ -38,9 +40,9 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 								+ (Sp->transpose())->kron(Sp1))*(J/2.) //Sp^(*t) x Sp1
 									+(Sz->kron(Sz1))*Jz; //Sz x Sz1 * Jz
 
-	//Scale up Sz and Sp to the proper size								
-  	std::shared_ptr<matrixReal> newSz(new matrixReal (singleSiteBasis*basisSize, singleSiteBasis*basisSize));
-	std::shared_ptr<matrixReal> newSp(new matrixReal (singleSiteBasis*basisSize, singleSiteBasis*basisSize));
+	//Scale up Sz and Sp to the proper size
+	auto newSz = make_shared<matrixReal>(singleSiteBasis*basisSize, singleSiteBasis*basisSize);
+	auto newSp = make_shared<matrixReal>(singleSiteBasis*basisSize, singleSiteBasis*basisSize);
 
 	*newSz = identMatrix.kron(*Sz);
 	*newSp = identMatrix.kron(*Sp);
