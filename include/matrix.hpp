@@ -7,6 +7,7 @@
 template <typename T> class matrixBase
 {
 protected:
+    static unsigned int memSize;
     size_t nrows, ncols;
     std::unique_ptr<T[]> vals;
 
@@ -15,16 +16,21 @@ public:
   matrixBase(const int nr, const int nc) : nrows(nr), ncols(nc), vals(std::unique_ptr<T[]>(new T[nc*nr]))
   {
     zero();
+    memSize += sizeof(T)*size(); //number of bytes allocated to instance of class
   }
 
 //  Copy Constructor
   matrixBase(const matrixBase& o) : nrows(o.nrows), ncols(o.ncols), vals(std::unique_ptr<T[]>(new T[nrows*ncols]))
   {
     std::copy_n(o.vals.get(), nrows*ncols, vals.get());
+    memSize += sizeof(T)*size(); //number of bytes allocated to instance of class
   }
 
 //  Move Constructor
   matrixBase(matrixBase&& o) : nrows(o.nrows), ncols(o.ncols), vals(std::move(o.vals)) { };
+
+//  Destructor
+  ~matrixBase(){memSize -= sizeof(T)*size();} //number of bytes allocated to instance of class
 
 //  Access functions
   size_t size() const { return nrows * ncols; }
@@ -80,6 +86,14 @@ public:
   void scale(const T a)
   {
     std::for_each(data(), data()+size(), [&a](T& p){p*=a;});
+  }
+
+//  Print memory usage for all matrices
+  void printMem() const
+  {
+    std::cout << "Current memory allocated to this matrix: " << size()*sizeof(T) << " bytes." << std::endl;
+    std::cout << "Total memory allocated for matrix storage: " << memSize << " bytes." << std::endl;
+    return;
   }
 
 //Extract a portion of the matrix starting at element(r,c), get (nr x nc matrix)
@@ -168,6 +182,9 @@ std::ostream &operator<<(std::ostream &out, const matrixBase <T> &o)
   out << std::endl;
   return out;
 };
+
+template<typename T> unsigned int matrixBase<T>::memSize = 0;
+
 
 //class matrixComplex
 
