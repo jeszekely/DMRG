@@ -52,7 +52,7 @@ matrixReal matrixReal:: operator+(const matrixReal& o) const
 
 matrixReal& matrixReal::operator+=(const matrixReal& o)
 {
-  *this = *this * o;
+  *this = *this + o;
   return *this;
 }
 
