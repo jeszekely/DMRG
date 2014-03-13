@@ -12,8 +12,16 @@ public:
 
 	block(int, int, std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>);
 	void enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1);
+	void rotateTruncate(matrixReal& transformationMatrix, int maxSize);
 };
 
 std::shared_ptr<matrixReal> buildSuperblock(block& sysBlock, block& envBlock);
+
+std::shared_ptr<matrixReal> makeReducedDM(matrixReal& groundWfxn);
+
+std::shared_ptr<matrixReal> makeTransformationMatrix(matrixReal& reducedDM, int basisSize, int keepNum);
+
+double truncationError(std::vector<double>& eigenvals, int basisSize, int keepNum);
+
 
 int dmrgInfiniteSystem(block& system, int L, int m);
