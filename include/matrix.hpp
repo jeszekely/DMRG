@@ -97,15 +97,16 @@ public:
   }
 
 //Extract a portion of the matrix starting at element(r,c), get (nr x nc matrix)
-  matrixBase <T> getSub(int r, int c, int nr, int nc) const
+  template <class U>
+  std::shared_ptr<U> getSub_impl(int r, int c, int nr, int nc) const
   {
-    assert(r + nr < nrows && c + nc < ncols);
-    matrixBase <T> out(nr,nc);
+    assert(r + nr <= nrows && c + nc <= ncols);
+    auto out = std::make_shared<U>(nr,nc);
     for (int ii = 0; ii < nr; ii++)
     {
       for (int jj = 0; jj < nc; jj++)
       {
-        out(ii,jj) = element(ii+r,jj+c);
+        out->element(ii,jj) = element(ii+r,jj+c);
       }
     }
     return out;
@@ -163,8 +164,10 @@ public:
 //Note: This will be used as a shortcut to create a superblock matrix for small site matrices
 //This should NOT be used for larger systems as it is very memory intensive
   matrixReal kron(matrixReal &o) const;
-
-
+  std::shared_ptr<matrixReal> getSub(int ii, int jj, int kk, int ll) const
+  {
+    return getSub_impl<matrixReal>(ii,jj,kk,ll);
+  }
 };
 
 //Overload the << operator to print a matrix
