@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iomanip>
 #include <assert.h>
+#include <random>
 
 template <typename T> class matrixBase
 {
@@ -42,6 +43,14 @@ public:
   void zero()
   {
     std::fill_n(vals.get(), nrows*ncols, T(0.0));
+  }
+
+  void random()
+  {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<T> dis(-2, 2);
+    std::generate_n(vals.get(), nrows*ncols, [&dis, &gen](){return dis(gen);});
   }
 
 //  Accessor functions
@@ -102,28 +111,18 @@ public:
   {
     assert(r + nr <= nrows && c + nc <= ncols);
     auto out = std::make_shared<U>(nr,nc);
-    for (int ii = 0; ii < nr; ii++)
-    {
-      for (int jj = 0; jj < nc; jj++)
-      {
-        out->element(ii,jj) = element(ii+r,jj+c);
-      }
-    }
+    for (int jj = 0; jj < nc; jj++)
+      std::copy_n(&element(r,c+jj),nr,&out->element(0,jj));
     return out;
-  }
+ }
 
 //Place matrix o at position (r,c)
   template <typename U>
   void setSub(int r, int c, U o)
   {
     assert(r + o.nrows <= nrows && c + o.ncols <= ncols);
-    for (int ii = 0; ii < o.nrows; ii++)
-    {
-      for (int jj = 0; jj < o.ncols; jj++)
-      {
-        element(ii+r,jj+c) = o(ii,jj);
-      }
-    }
+    for (int jj = 0; jj < o.ncols; jj++)
+      std::copy_n(&o(0,jj), o.nrows, &element(r,c+jj));
     return;
   }
 
