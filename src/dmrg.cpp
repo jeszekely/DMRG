@@ -33,7 +33,6 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 	double Jz = 1;
 
 	auto newH = make_shared<matrixReal>(singleSiteBasis*basisSize, singleSiteBasis*basisSize);
-
 	//See Chapter 2 The Density Matrix Renormalization Group (Adrian E. Feiguin) eq. 2.6, 2.8, 2.11
 	*newH = H->kron(smallIdent) //H x I_2
 						+ identMatrix.kron(H1)  //I_basisSize x H_1
@@ -44,9 +43,9 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 	//Scale up Sz and Sp to the proper size
 	auto newSz = make_shared<matrixReal>(singleSiteBasis*basisSize, singleSiteBasis*basisSize);
 	auto newSp = make_shared<matrixReal>(singleSiteBasis*basisSize, singleSiteBasis*basisSize);
-  	
-	*newSz = identMatrix.kron(*Sz);
-	*newSp = identMatrix.kron(*Sp);
+	//cout << singleSiteBasis*basisSize << endl;
+	*newSz = identMatrix.kron(Sz1);
+	*newSp = identMatrix.kron(Sp1);
 
 	//Transfer the data from the temporary pointers into the permanent variables in the block class
 	H=newH;
@@ -62,18 +61,35 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 
 void block::rotateTruncate(matrixReal& transformationMatrix, int maxSize)
 {
-	*H = *transformationMatrix.transpose()*(*H*transformationMatrix);
-	*Sp = *transformationMatrix.transpose()*(*Sp*transformationMatrix);
-	*Sz = *transformationMatrix.transpose()*(*Sz*transformationMatrix);
+	int size = min (basisSize, maxSize);
+	int singleSiteBasis = 2;
+	//cout << singleSiteBasis*size/2 << endl;
+	//cout << transformationMatrix.size() << endl;
+	//cout << H->size() << endl;
+	//cout << transformationMatrix;
+	//it's all over 2, b/c the basis size has already been doubled in the enlarge step
+	int reducedSize = singleSiteBasis * size/2;
+	auto newH = make_shared<matrixReal>(reducedSize,reducedSize);
+	*newH = *transformationMatrix.transpose()*(*H*transformationMatrix);
+	H = newH; 
+
+	auto newSp = make_shared<matrixReal>(reducedSize,reducedSize);
+	*newSp = *transformationMatrix.transpose()*(*Sp*transformationMatrix);
+	Sp=newSp;
+
+	auto newSz = make_shared<matrixReal>(reducedSize,reducedSize);
+	*newSz = *transformationMatrix.transpose()*(*Sz*transformationMatrix);
+	Sz=newSz;
+
+	//*H = *transformationMatrix.transpose()*(*H*transformationMatrix);
+	// *Sp = *transformationMatrix.transpose()*(*Sp*transformationMatrix);
+	// *Sz = *transformationMatrix.transpose()*(*Sz*transformationMatrix);
+	//cout << "Rotated and Truncated H: " << endl << *H;
+	//cout << "Rotated and Truncated Sp: " << endl << *Sp;
+	//cout << "Rotated and Truncated Sz: " << endl << *Sz;
+
+	basisSize=size;
 	
-	cout << "Rotated and Truncated H: " << endl << *H;
-	cout << "Rotated and Truncated Sp: " << endl << *Sp;
-	cout << "Rotated and Truncated Sz: " << endl << *Sz;
-
-	if (basisSize < maxSize){
-		basisSize=maxSize;
-	}
-
 	return;
 }
 
@@ -97,9 +113,8 @@ shared_ptr<matrixReal> buildSuperblock(block& sysBlock, block& envBlock)
 
 	sysBlock.enlarge(*H1, *Sp1, *Sz1);
 	envBlock.enlarge(*H1, *Sp1, *Sz1);
-	cout << "System Block Basis Size: "<<sysBlock.basisSize << endl;
-	cout << "Environment Block Basis Size: "<<envBlock.basisSize << endl;
-
+	//cout << "System Block Basis Size: "<<sysBlock.basisSize << endl;
+	//cout << "Environment Block Basis Size: "<<envBlock.basisSize << endl;
 
 	matrixReal sysIdent(sysBlock.basisSize,sysBlock.basisSize);
 	sysIdent.makeIdentity();
@@ -113,6 +128,7 @@ shared_ptr<matrixReal> buildSuperblock(block& sysBlock, block& envBlock)
 	//antiferromagnetic case
 	double J = 1;
 	double Jz = 1;
+
 
 	*superBlock = sysBlock.H->kron(envIdent) + envIdent.kron(*envBlock.H) //SysH x I_envSize + I_sysSize x EnvH
 					+(sysBlock.Sp->kron(*envBlock.Sp->transpose()))*J/2 //  ( sysSp x envSp*t ) * J/2 
@@ -131,17 +147,17 @@ shared_ptr<matrixReal> makeReducedDM(matrixReal& groundWfxn)
 	//See Schollwock 2011 p.8 or Feguin 2013 p.42
 
 	int nrows = sqrt(groundWfxn.size());
-
+	//cout << groundWfxn.size() << endl;
 	auto squarePsi = make_shared<matrixReal>(nrows,nrows);
 
 	for (int ii = 0; ii < nrows; ii++)
 	{
 		//turn the ground wavefunction into a matrix - it's from the python code
 		//it's row major, which may be important? I'm really not sure how or why the python code works
-		squarePsi->setSub(0,ii, *groundWfxn.getSub(ii*nrows,0,4,1)); //pull out part of the row from groundWfxn
+		squarePsi->setSub(0,ii, *groundWfxn.getSub(ii*nrows,0,nrows,1)); //pull out part of the row from groundWfxn
 	}
-	cout << endl << "Turn Psi into a matrix: " << endl;
-	cout << *squarePsi;
+	//cout << endl << "Turn Psi into a matrix: " << endl;
+	//cout << *squarePsi;
 	//rho = psi * psi^*t
 	*squarePsi *= (*squarePsi->transpose());
 
@@ -154,15 +170,13 @@ std::shared_ptr<matrixReal> makeTransformationMatrix(matrixReal& reducedDM, int 
 	int	actualKeepNum = min(keepNum, basisSize); //you can't keep more eigenfunctions than exist in the density matrix, only relevant for early steps
 
 	auto transformMatrix = make_shared<matrixReal>(basisSize, actualKeepNum);
-
+	//cout << basisSize << endl << actualKeepNum << endl;
 	//now we just need to fill the transformMatrix with elements from the reducedDM, from high eigenvalue to low
 	auto extractedColumn = make_shared<matrixReal>(basisSize, 1);
 	for (int ii = 0; ii < actualKeepNum; ii++){
-//		  void setSub(int r, int c, U o)
 		extractedColumn = reducedDM.getSub(0,actualKeepNum-ii-1, basisSize,1); //the high eigenvalues are on the right hand side of the reducedDM
 		transformMatrix->setSub(0,ii,*extractedColumn);
 	}
-	
 
 	return transformMatrix;
 }
@@ -173,13 +187,19 @@ double truncationError(std::vector<double>& eigenvals, int basisSize, int keepNu
 {
 	double sum = 0;
 	int count = 0;
-	for (auto c : eigenvals){
-	    if (count < min(keepNum, basisSize)){
+	int offset = 0;
+	if (basisSize > keepNum)
+	{
+		offset=basisSize-keepNum;
+	}
+	
+ 	for (auto c : eigenvals){
+	    if (count >= offset){
 	    	sum+=c;
 	    }
-	    count++;
-
+	    count ++;
 	}
+
 	return 1-sum;
 }
 

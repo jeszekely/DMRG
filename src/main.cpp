@@ -81,64 +81,66 @@ int main(int argc, char const *argv[])
   auto eSz1 = make_shared<matrixReal>(*Sz1);
 
 
-  block testBlock(1,2,H1, Sp1, Sz1);
-  //Sz1->printMem();
-  testBlock.enlarge(*H1, *Sp1, *Sz1);
-  cout << "Hamiltonian:" << endl << *testBlock.H;
-  cout << "Sp:" << endl << *testBlock.Sp;
-  cout << "Sz:" << endl << *testBlock.Sz;
-  //Sz1->printMem();
-  //(*Sp1).~matrixReal();
-  //Sz1->printMem();
+  // block testBlock(1,2,H1, Sp1, Sz1);
+  // testBlock.enlarge(*H1, *Sp1, *Sz1);
+  // cout << "Hamiltonian:" << endl << *testBlock.H;
+  // cout << "Sp:" << endl << *testBlock.Sp;
+  // cout << "Sz:" << endl << *testBlock.Sz;
 
 
   //Implemented in shoddy, procedural style. Will improve later, once the math all works. 
   block sysBlock(1,2,sH1, sSp1, sSz1);
   block envBlock(1,2,eH1, eSp1, eSz1);
 
-  //Build Superblock
-  auto superBlock = buildSuperblock(sysBlock, envBlock);
-  cout << "First 10x10 of Superblock: " << endl << *superBlock << endl;
-
-  //Diagonalize Superblock (we want the ground state wavefunction)
-  vector <double> superBlockVals(sysBlock.basisSize*sysBlock.basisSize,0.0);
-  superBlock->diagonalize(superBlockVals.data());
-  
-  cout << "Diagonalized Superblock: " << endl;
-  cout << *superBlock;
-
-  matrixReal groundState = *superBlock->getSub(0,0,sysBlock.basisSize*sysBlock.basisSize,1);
-  cout << "Ground State Wavefunction: " << endl << groundState;
-
-  cout << "Eigenvalues: " << endl;
-  cout << *superBlockVals.data() << endl;;
-
-  //Make Reduced Density Matrix
-  auto reducedDM = makeReducedDM(groundState);
-  cout << "Reduced DM: "<< endl<< *reducedDM;
-
-  //Diagonalize Reduced Density Matrix
-  vector <double> reducedDMVals(sysBlock.basisSize,0.0);
-  reducedDM->diagonalize(reducedDMVals.data());
-
-  cout << "Diagonalized Reduced DM: " << endl << *reducedDM;
-  
-  cout << "Eigenvalues: " << endl;
-  for (auto c : reducedDMVals)
-    std::cout << c << endl;
-
-  //Make transformation matrix from reduced density matrix by keeping only up to maxKeepNum eigenstates.
   int maxKeepNum=20; //# maximum of eigenstates to keep
-  auto transformMatrix = makeTransformationMatrix(*reducedDM,sysBlock.basisSize,maxKeepNum);
-  cout << endl << "Transform Matrix: " << endl << *transformMatrix;
+  int maxLen=10;
+  for (int currentLen = 0; currentLen < maxLen; currentLen++){
+    cout << "System Length = " << 2*sysBlock.nSites+2 << endl;
+    //***Build Superblock***
+    auto superBlock = buildSuperblock(sysBlock, envBlock);
+    //cout << "First 10x10 of Superblock: " << endl << *superBlock << endl;
 
-  double error = truncationError(reducedDMVals,sysBlock.basisSize, maxKeepNum);
-  cout << "Truncation Error : " << error << endl;
+    //***Diagonalize Superblock (we want the ground state wavefunction)***
+    vector <double> superBlockVals(sysBlock.basisSize*sysBlock.basisSize,0.0);
+    superBlock->diagonalize(superBlockVals.data());
+    
+   // cout << "Diagonalized Superblock: " << endl;
+   // cout << *superBlock;
 
-  //Update the matrices (H, Sp, and Sz) in block
-  sysBlock.rotateTruncate(*transformMatrix, maxKeepNum);
+    matrixReal groundState = *superBlock->getSub(0,0,sysBlock.basisSize*sysBlock.basisSize,1);
+   // cout << "Ground State Wavefunction: " << endl << groundState;
 
-  cout << "System Length = " << 2*sysBlock.nSites << endl;
-  cout << "E/L = " << *superBlockVals.data()/(sysBlock.nSites*2) << endl;
+   // cout << "Eigenvalues: " << endl;
+   //  for (auto c : superBlockVals)
+   //    std::cout << c << "\t";
+    
+    //***Make Reduced Density Matrix***
+    auto reducedDM = makeReducedDM(groundState);
+   // cout << "Reduced DM: "<< endl<< *reducedDM;
+
+    //***Diagonalize Reduced Density Matrix***
+    vector <double> reducedDMVals(sysBlock.basisSize,0.0);
+    reducedDM->diagonalize(reducedDMVals.data());
+
+    //cout << "Diagonalized Reduced DM: " << endl << *reducedDM;
+    
+    // cout << "Eigenvalues: " << endl;
+    // for (auto c : reducedDMVals)
+    //   std::cout <<std::setprecision(10) << c <<"\t";
+
+    //***Make transformation matrix from reduced density matrix by keeping only up to maxKeepNum eigenstates.***
+    auto transformMatrix = makeTransformationMatrix(*reducedDM,sysBlock.basisSize,maxKeepNum);
+    //cout << endl << "Transform Matrix: " << endl << *transformMatrix;
+    double error = truncationError(reducedDMVals,sysBlock.basisSize, maxKeepNum);
+    
+    //***Update the matrices (H, Sp, and Sz) in block***
+    sysBlock.rotateTruncate(*transformMatrix, maxKeepNum);
+    envBlock.rotateTruncate(*transformMatrix, maxKeepNum);
+
+    cout << "Truncation Error : " << error << endl;
+    cout << "E/L = " << std::setprecision(10) << *superBlockVals.data()/(sysBlock.nSites*2) << endl;
+    transformMatrix->printMem();
+    cout << "******************************************************************************" << endl;
+  }  
   return 0;
 }
