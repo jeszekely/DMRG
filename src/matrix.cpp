@@ -42,6 +42,24 @@ matrixReal matrixReal::operator*(const matrixReal& o) const
   return out;
 }
 
+//Matrix multiplication, left matrix is transposed
+matrixReal matrixReal::operator|(const matrixReal& o) const
+{
+  assert(nrows == o.nrows);
+  matrixReal out(ncols, o.ncols);
+  dgemm_("T","N", nrows, o.ncols, o.nrows, 1.0, data(), nrows, o.data(), o.nrows, 0.0, out.data(), nrows);
+  return out;
+}
+
+//Matrix multiplication, right matrix is transposed
+matrixReal matrixReal::operator^(const matrixReal& o) const
+{
+  assert(ncols == o.ncols);
+  matrixReal out(nrows, o.nrows);
+  dgemm_("N","T", nrows, o.ncols, o.nrows, 1.0, data(), nrows, o.data(), o.nrows, 0.0, out.data(), nrows);
+  return out;
+}
+
 matrixReal matrixReal:: operator+(const matrixReal& o) const
 {
   assert(ncols == o.ncols && nrows == o.nrows);

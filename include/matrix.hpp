@@ -144,6 +144,9 @@ public:
   matrixReal& operator+=(const matrixReal&);
   matrixReal operator-(const matrixReal&) const;
   matrixReal& operator-=(const matrixReal&);
+  matrixReal operator|(const matrixReal&) const;
+  matrixReal operator^(const matrixReal&) const;
+
 
 //Scalar-Matrix Operations
 //Note: binary scalar operations only work as rhs operators at the moment
@@ -185,7 +188,7 @@ std::ostream &operator<<(std::ostream &out, const matrixBase <T> &o)
   return out;
 };
 
-template<typename T> unsigned int matrixBase<T>::memSize = 0;
+template <typename T> unsigned int matrixBase<T>::memSize = 0;
 
 
 //class matrixComplex
