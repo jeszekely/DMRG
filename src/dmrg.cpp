@@ -132,7 +132,7 @@ std::shared_ptr<matrixReal> makeTransformationMatrix(matrixReal& reducedDM, int 
 double truncationError(std::vector<double>& eigenvals, int basisSize, int keepNum)
 {
 	//This probably doesn't need to be a separate function
-	return accumulate(eigenvals.begin(),eigenvals.begin()+max(basisSize-keepNum,0),0);
+	return accumulate(eigenvals.begin(),eigenvals.begin()+max(basisSize-keepNum,0),0.0);
 }
 
 int dmrgInfiniteSystem(block& system, int L, int m)
