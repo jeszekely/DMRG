@@ -174,7 +174,8 @@ std::shared_ptr<matrixReal> makeTransformationMatrix(matrixReal& reducedDM, int 
 	//now we just need to fill the transformMatrix with elements from the reducedDM, from high eigenvalue to low
 	auto extractedColumn = make_shared<matrixReal>(basisSize, 1);
 	for (int ii = 0; ii < actualKeepNum; ii++){
-		extractedColumn = reducedDM.getSub(0,actualKeepNum-ii-1, basisSize,1); //the high eigenvalues are on the right hand side of the reducedDM
+		extractedColumn = reducedDM.getSub(0,basisSize-ii-1, basisSize,1); //the high eigenvalues are on the right hand side of the reducedDM
+		//cout << *extractedColumn;
 		transformMatrix->setSub(0,ii,*extractedColumn);
 	}
 

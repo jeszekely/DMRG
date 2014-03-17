@@ -93,8 +93,8 @@ int main(int argc, char const *argv[])
   block envBlock(1,2,eH1, eSp1, eSz1);
 
   int maxKeepNum=20; //# maximum of eigenstates to keep
-  int maxLen=10;
-  for (int currentLen = 0; currentLen < maxLen; currentLen++){
+  int maxChainLen=10;
+  for (int currentLen = 0; currentLen < maxChainLen; currentLen++){
     cout << "System Length = " << 2*sysBlock.nSites+2 << endl;
     //***Build Superblock***
     auto superBlock = buildSuperblock(sysBlock, envBlock);
@@ -104,19 +104,21 @@ int main(int argc, char const *argv[])
     vector <double> superBlockVals(sysBlock.basisSize*sysBlock.basisSize,0.0);
     superBlock->diagonalize(superBlockVals.data());
     
-   // cout << "Diagonalized Superblock: " << endl;
-   // cout << *superBlock;
+    // cout << "Diagonalized Superblock: " << endl;
+    // cout << *superBlock;
 
-    matrixReal groundState = *superBlock->getSub(0,0,sysBlock.basisSize*sysBlock.basisSize,1);
-   // cout << "Ground State Wavefunction: " << endl << groundState;
 
    // cout << "Eigenvalues: " << endl;
    //  for (auto c : superBlockVals)
    //    std::cout << c << "\t";
     
+
+    matrixReal groundState = *superBlock->getSub(0,0,sysBlock.basisSize*sysBlock.basisSize,1);
+    //cout << "Ground State Wavefunction: " << endl << groundState;
+
     //***Make Reduced Density Matrix***
     auto reducedDM = makeReducedDM(groundState);
-   // cout << "Reduced DM: "<< endl<< *reducedDM;
+    //cout << "Reduced DM: "<< endl<< *reducedDM;
 
     //***Diagonalize Reduced Density Matrix***
     vector <double> reducedDMVals(sysBlock.basisSize,0.0);
