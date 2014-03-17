@@ -19,7 +19,7 @@ public:
   //Orthonormalize Vecs
   void orthonorm();
 
-  std::tuple<std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>> diagonalize();
+  void diagonalize();
 };
 
 // Davidson algorithm:

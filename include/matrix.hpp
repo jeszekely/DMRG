@@ -1,3 +1,6 @@
+#ifndef DMRG_MATRIX
+#define DMRG_MATRIX
+
 #include <memory>
 #include <algorithm>
 #include <iostream>
@@ -44,6 +47,9 @@ public:
   {
     std::fill_n(vals.get(), nrows*ncols, T(0.0));
   }
+
+  size_t nr() const {return nrows;}
+  size_t nc() const {return ncols;}
 
   void random()
   {
@@ -147,7 +153,6 @@ public:
   matrixReal operator|(const matrixReal&) const;
   matrixReal operator^(const matrixReal&) const;
 
-
 //Scalar-Matrix Operations
 //Note: binary scalar operations only work as rhs operators at the moment
   matrixReal operator*(const double&) const;
@@ -190,6 +195,6 @@ std::ostream &operator<<(std::ostream &out, const matrixBase <T> &o)
 
 template <typename T> unsigned int matrixBase<T>::memSize = 0;
 
-
 //class matrixComplex
 
+#endif

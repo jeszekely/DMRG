@@ -9,6 +9,7 @@
 
 #include "matrix.hpp"
 #include "dmrg.hpp"
+#include "utilities.hpp"
 
 using namespace std;
 
@@ -62,34 +63,10 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 void block::rotateTruncate(matrixReal& transformationMatrix, int maxSize)
 {
 	int size = min (basisSize, maxSize);
-	int singleSiteBasis = 2;
-	//cout << singleSiteBasis*size/2 << endl;
-	//cout << transformationMatrix.size() << endl;
-	//cout << H->size() << endl;
-	//cout << transformationMatrix;
-	//it's all over 2, b/c the basis size has already been doubled in the enlarge step
-	int reducedSize = singleSiteBasis * size/2;
-	auto newH = make_shared<matrixReal>(reducedSize,reducedSize);
-	*newH = *transformationMatrix.transpose()*(*H*transformationMatrix);
-	H = newH; 
-
-	auto newSp = make_shared<matrixReal>(reducedSize,reducedSize);
-	*newSp = *transformationMatrix.transpose()*(*Sp*transformationMatrix);
-	Sp=newSp;
-
-	auto newSz = make_shared<matrixReal>(reducedSize,reducedSize);
-	*newSz = *transformationMatrix.transpose()*(*Sz*transformationMatrix);
-	Sz=newSz;
-
-	//*H = *transformationMatrix.transpose()*(*H*transformationMatrix);
-	// *Sp = *transformationMatrix.transpose()*(*Sp*transformationMatrix);
-	// *Sz = *transformationMatrix.transpose()*(*Sz*transformationMatrix);
-	//cout << "Rotated and Truncated H: " << endl << *H;
-	//cout << "Rotated and Truncated Sp: " << endl << *Sp;
-	//cout << "Rotated and Truncated Sz: " << endl << *Sz;
-
+	H = make_shared<matrixReal>(transformationMatrix | *H * transformationMatrix);
+	Sp = make_shared<matrixReal>(transformationMatrix | *Sp * transformationMatrix);
+	Sz = make_shared<matrixReal>(transformationMatrix | *Sz * transformationMatrix);
 	basisSize=size;
-	
 	return;
 }
 
@@ -118,7 +95,7 @@ shared_ptr<matrixReal> buildSuperblock(block& sysBlock, block& envBlock)
 
 	matrixReal sysIdent(sysBlock.basisSize,sysBlock.basisSize);
 	sysIdent.makeIdentity();
-	
+
 	matrixReal envIdent(envBlock.basisSize,envBlock.basisSize);
 	envIdent.makeIdentity();
 
@@ -128,80 +105,34 @@ shared_ptr<matrixReal> buildSuperblock(block& sysBlock, block& envBlock)
 	//antiferromagnetic case
 	double J = 1;
 	double Jz = 1;
-
-
 	*superBlock = sysBlock.H->kron(envIdent) + envIdent.kron(*envBlock.H) //SysH x I_envSize + I_sysSize x EnvH
-					+(sysBlock.Sp->kron(*envBlock.Sp->transpose()))*J/2 //  ( sysSp x envSp*t ) * J/2 
+					+(sysBlock.Sp->kron(*envBlock.Sp->transpose()))*J/2 //  ( sysSp x envSp*t ) * J/2
 						+(sysBlock.Sp->transpose()->kron(*envBlock.Sp))*J/2 // ( sysSp*t x envSp) * J/2
 							+(sysBlock.Sz->kron(*envBlock.Sz))*Jz; // ( sysSz x envSz ) Jz
 
 
 	//cout << "First 10x10 of Superblock: " << endl << *superBlock << endl;
-
 	return superBlock;
 }
 
 shared_ptr<matrixReal> makeReducedDM(matrixReal& groundWfxn)
-{	//rho_sys = Tr_env |psi><psi|
-	//rho_sys_i,i' = sum_j psi_i,j psi^*_i',j
-	//See Schollwock 2011 p.8 or Feguin 2013 p.42
-
-	int nrows = sqrt(groundWfxn.size());
-	//cout << groundWfxn.size() << endl;
+{
+	const int nrows = sqrt(groundWfxn.size());
 	auto squarePsi = make_shared<matrixReal>(nrows,nrows);
-
-	for (int ii = 0; ii < nrows; ii++)
-	{
-		//turn the ground wavefunction into a matrix - it's from the python code
-		//it's row major, which may be important? I'm really not sure how or why the python code works
-		squarePsi->setSub(0,ii, *groundWfxn.getSub(ii*nrows,0,nrows,1)); //pull out part of the row from groundWfxn
-	}
-	//cout << endl << "Turn Psi into a matrix: " << endl;
-	//cout << *squarePsi;
-	//rho = psi * psi^*t
-	*squarePsi *= (*squarePsi->transpose());
-
-
-	return squarePsi; 
+	dgemm_("N", "T", nrows, nrows, nrows, 1.0, groundWfxn.data(), nrows, groundWfxn.data(), nrows, 0.0, squarePsi->data(), nrows);
+	return squarePsi;
 }
 
 std::shared_ptr<matrixReal> makeTransformationMatrix(matrixReal& reducedDM, int basisSize, int keepNum)
 {
-	int	actualKeepNum = min(keepNum, basisSize); //you can't keep more eigenfunctions than exist in the density matrix, only relevant for early steps
-
-	auto transformMatrix = make_shared<matrixReal>(basisSize, actualKeepNum);
-	//cout << basisSize << endl << actualKeepNum << endl;
-	//now we just need to fill the transformMatrix with elements from the reducedDM, from high eigenvalue to low
-	auto extractedColumn = make_shared<matrixReal>(basisSize, 1);
-	for (int ii = 0; ii < actualKeepNum; ii++){
-		extractedColumn = reducedDM.getSub(0,basisSize-ii-1, basisSize,1); //the high eigenvalues are on the right hand side of the reducedDM
-		//cout << *extractedColumn;
-		transformMatrix->setSub(0,ii,*extractedColumn);
-	}
-
-	return transformMatrix;
+	int	actualKeepNum = min(keepNum, basisSize);
+	return reducedDM.getSub(0,basisSize-actualKeepNum,basisSize,actualKeepNum);
 }
-
-
 
 double truncationError(std::vector<double>& eigenvals, int basisSize, int keepNum)
 {
-	double sum = 0;
-	int count = 0;
-	int offset = 0;
-	if (basisSize > keepNum)
-	{
-		offset=basisSize-keepNum;
-	}
-	
- 	for (auto c : eigenvals){
-	    if (count >= offset){
-	    	sum+=c;
-	    }
-	    count ++;
-	}
-
-	return 1-sum;
+	//This probably doesn't need to be a separate function
+	return accumulate(eigenvals.begin(),eigenvals.begin()+max(basisSize-keepNum,0),0);
 }
 
 int dmrgInfiniteSystem(block& system, int L, int m)
