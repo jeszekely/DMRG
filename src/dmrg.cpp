@@ -177,4 +177,12 @@ void block::rotateTruncate(matrixReal& transformationMatrix)
 	return;
 }
 
+<<<<<<< HEAD
+=======
+double truncationError(std::vector<double>& eigenvals, int basisSize, int keepNum)
+{
+	//This probably doesn't need to be a separate function
+	return accumulate(eigenvals.begin(),eigenvals.begin()+max(basisSize-keepNum,0),0.0);
+}
+>>>>>>> 59b5cd9e00105a6990c0d0dae2e528a15b9691a7
 
