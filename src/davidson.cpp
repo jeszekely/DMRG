@@ -53,13 +53,13 @@ void Davidson::orthonorm()
 }
 
 //Diagonalize matrix, return eigenvectors as columns of a matrixReal
-std::tuple<std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>> Davidson::diagonalize()
-{
-  for (shared_ptr<matrixReal>& v : Vecs)
-  {
-      cout << *v << endl;
-  }
-}
+// std::tuple<std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>> Davidson::diagonalize()
+// {
+//   for (shared_ptr<matrixReal>& v : Vecs)
+//   {
+//       cout << *v << endl;
+//   }
+// }
 
 
 // Davidson algorithm:
