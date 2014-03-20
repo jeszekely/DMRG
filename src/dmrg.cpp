@@ -91,14 +91,13 @@ void finiteSystem::initializeBlocks()
 
 		cout << "System Block Size: "<< sysBlock.nSites << endl;
     	cout << "Environment Block Size: "<< envBlock.nSites << endl;
-
+    
     	tie(error,energy)=sysBlock.infiniteDMRGStep(envBlock);
 
 		cout << "Truncation Error : " << error << endl;
 	    cout << "E/L = " << std::setprecision(10) << energy/sysLength << endl;
 	    //newLeftBlock.H->printMem();
     	sysList->at(sysBlock.nSites-1) = make_shared<block>(sysBlock);
-    	//cout << *(sysBlock.H);
 	    cout << "******************************************************************************" << endl;
 
 	   	//cout << cycle << endl;
@@ -121,12 +120,12 @@ std::tuple<double, double> block::infiniteDMRGStep(block& environmentBlock)
 	shared_ptr<matrixReal> groundState;
 	double energy;
 	tie(energy,groundState) = this->buildSuperblock(environmentBlock);
-	//cout << "Ground State: " << endl << *groundState;
+
 	//*** Make Reduced Density Matrix, then Diagonalize it, and get the truncation error while we're at it***
    	shared_ptr<matrixReal> reducedDM;
 	double error;
    	tie(error,reducedDM)= this->makeReducedDM(*groundState);
-   	//cout << *reducedDM;
+
     //***Diagonalize Reduced Density Matrix***
     //***Make transformation matrix from reduced density matrix by keeping only up to maxKeepNum eigenstates.***
     this->makeTransformationMatrix(*reducedDM);
@@ -150,22 +149,10 @@ std::tuple<double, std::shared_ptr<matrixReal>> block::buildSuperblock(block& en
 	Sz1->element(0,0) = 0.5;
 	Sz1->element(1,1) = -0.5;
 
-	// cout << "SysBlock (Not Enlarged)" << endl;
-	// cout << H->size() << endl;
-	// cout << *H << endl;
-	this->enlarge(*H1, *Sp1, *Sz1);
-	// cout << *H << endl;
-	// cout << *envBlock.H << endl;
-
-	envBlock.enlarge(*H1, *Sp1, *Sz1);
 	
-	// cout << "SysBlock (Enlarged)" << endl;
-	// cout << H->size() << endl;
-	// cout << *H << endl;
+	this->enlarge(*H1, *Sp1, *Sz1);
+	envBlock.enlarge(*H1, *Sp1, *Sz1);
 
-	// cout << "EnvBlock (Enlarged)" << endl;
-	// cout << envBlock.H->size() << endl;
-	// cout << *envBlock.H << endl;
 
 
 	matrixReal sysIdent(basisSize,basisSize);
@@ -189,13 +176,11 @@ std::tuple<double, std::shared_ptr<matrixReal>> block::buildSuperblock(block& en
 
 	// *** Diagonalize the Superblock and get the eigenvalues ***
 	vector <double> superBlockVals(basisSize*envBlock.basisSize,0.0);
-    //cout << "Superblock" << endl;
-    //cout << *superBlock;
+
 	superBlock->diagonalize(superBlockVals.data());
-    //cout << "End Diag" << endl;
 
 	// *** Get the ground state of the diagonalized superblock
-	//cout <<"GroundWfxn  " << basisSize << "\t" << envBlock.basisSize << "\t" << basisSize*envBlock.basisSize << endl;
+
 	auto groundState = make_shared<matrixReal>(*superBlock->getSub(0,0,basisSize*envBlock.basisSize,1));
 	// ** Return the ground state energy and the ground state itself ***
 	return make_tuple(*superBlockVals.data(), groundState);
@@ -221,13 +206,6 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 	
 	auto newH = make_shared<matrixReal>(singleSiteBasis*basisSize, singleSiteBasis*basisSize);
 	//See Chapter 2 The Density Matrix Renormalization Group (Adrian E. Feiguin) eq. 2.6, 2.8, 2.11
-	// cout << *H;
-	// cout << (H->kron(smallIdent));
-	// cout << (identMatrix.kron(H1));
-	// cout << (Sp->kron(*Sp1.transpose()));
-	// cout << ((Sp->transpose())->kron(Sp1));
-	// cout << (Sz->kron(Sz1));
-
 	*newH = H->kron(smallIdent) //H x I_2
 						+ identMatrix.kron(H1)  //I_basisSize x H_1
 							+ (Sp->kron(*Sp1.transpose()) //Sp x Sp1^(*t)
@@ -237,7 +215,7 @@ void block::enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1)
 	//Scale up Sz and Sp to the proper size
 	auto newSz = make_shared<matrixReal>(singleSiteBasis*basisSize, singleSiteBasis*basisSize);
 	auto newSp = make_shared<matrixReal>(singleSiteBasis*basisSize, singleSiteBasis*basisSize);
-	//cout << singleSiteBasis*basisSize << endl;
+
 	*newSz = identMatrix.kron(Sz1);
 	*newSp = identMatrix.kron(Sp1);
 
@@ -259,21 +237,16 @@ std::tuple<double, std::shared_ptr<matrixReal>> block::makeReducedDM(matrixReal&
 	// *** Make Reduced Density Matrix ***
     cout << "Make Reduced DM" <<endl;
 
-	//cout << basisSize << "," << groundWfxn.size() << "," <<  groundWfxn.size()/basisSize << endl;
 	auto squarePsi = make_shared<matrixReal>(basisSize,basisSize);
-  const int environment_basis = groundWfxn.size()/basisSize;
-	dgemm_("N", "T", basisSize, basisSize, environment_basis, 1.0, groundWfxn.data(), basisSize, groundWfxn.data(), basisSize, 0.0, squarePsi->data(), basisSize);
+    const int environment_basis = groundWfxn.size()/basisSize;
+
+    //We transpose the first matrix. Basically, the 2nd index is the one that moves first (a consequence of the way the kronecker product is written)
+	dgemm_("T", "N", basisSize, basisSize, environment_basis, 1.0, groundWfxn.data(), environment_basis, groundWfxn.data(), environment_basis, 0.0, squarePsi->data(), basisSize);
 	
-	//cout << "Square Psi: " << endl << *squarePsi;
 	// *** Diagonalize the Reduced DM, and get the eigenvalues ***
     vector <double> reducedDMVals(basisSize,0.0);
     squarePsi->diagonalize(reducedDMVals.data());
 
-
-    //cout << *squarePsi;
- //    for (auto c : reducedDMVals)
- //    std::cout << c << ' ';
-	// cout << endl;
 
 
     // *** Calculate the truncation error ***
