@@ -261,8 +261,8 @@ std::tuple<double, std::shared_ptr<matrixReal>> block::makeReducedDM(matrixReal&
 
 	//cout << basisSize << "," << groundWfxn.size() << "," <<  groundWfxn.size()/basisSize << endl;
 	auto squarePsi = make_shared<matrixReal>(basisSize,basisSize);
-	matrixReal ground_copy(groundWfxn);
-	dgemm_("N", "T", basisSize, basisSize, basisSize, 1.0, groundWfxn.data(), basisSize, ground_copy.data(), basisSize, 0.0, squarePsi->data(), basisSize);
+  const int environment_basis = groundWfxn.size()/basisSize;
+	dgemm_("N", "T", basisSize, basisSize, environment_basis, 1.0, groundWfxn.data(), basisSize, groundWfxn.data(), basisSize, 0.0, squarePsi->data(), basisSize);
 	
 	//cout << "Square Psi: " << endl << *squarePsi;
 	// *** Diagonalize the Reduced DM, and get the eigenvalues ***
