@@ -42,6 +42,27 @@ matrixReal matrixReal::operator*(const matrixReal& o) const
   return out;
 }
 
+//vector dot product
+double matrixReal::operator%(const matrixReal& o) const
+{
+  assert(ncols == 1 && o.ncols == 1 && nrows == o.nrows);
+  return ddot_(nrows, data(), 1, o.data(), 1);
+}
+
+//vector dot product where vectors are two columns in matrix
+double matrixReal::dot(const int ii, const int jj) const
+{
+  assert(ncols > max(ii,jj));
+  return ddot_(nrows, &element(0,ii), 1, &element(0,jj), 1);
+}
+
+//vector dot product where vectors are two columns in separate matricies
+double matrixReal::dot(const matrixReal& o, const int ii, const int jj) const
+{
+  assert(ncols > ii && o.ncols > jj && nrows == o.nrows);
+  return ddot_(nrows, &element(0,ii), 1, &o.element(0,jj), 1);
+}
+
 //Matrix multiplication, left matrix is transposed
 matrixReal matrixReal::operator|(const matrixReal& o) const
 {
@@ -168,6 +189,5 @@ matrixReal matrixReal::kron(matrixReal &o) const
   return out;
 }
 
-  //  Remove a row or column
   //  Hermitian Conjugate
   //  *sparsify

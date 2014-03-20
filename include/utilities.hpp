@@ -13,6 +13,8 @@ extern "C"
     const double* beta, double* c, const int* ldc);
 
   void dsyev_(const char*, const char*, const int*, double*, const int*, double*, double*, const int*, int*);
+
+  double ddot_(const int*, const double*, const int*, const double*, const int*);
 }
 
 //LAPACK
@@ -46,6 +48,12 @@ namespace
   void mkl_domatcopy_(const char* ordering, const char* trans, const int r, const int c, const double alpha,
                     const double* A, const int nr, double* B, const int nc)
                     {mkl_domatcopy(*ordering,*trans,r,c,alpha,A,nr,B,nc);}
+
+  double ddot_(const int a, const double* b, const int c, const double* d, const int e) { return ::ddot_(&a,b,&c,d,&e);}
+
+  double ddot_(const int a, const std::unique_ptr<double []>& b, const int c, const std::unique_ptr<double []>& d, const int e)
+             { return ::ddot_(&a,b.get(),&c,d.get(),&e); }
+
 }
 
 #endif

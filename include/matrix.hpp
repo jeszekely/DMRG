@@ -103,6 +103,12 @@ public:
     std::for_each(data(), data()+size(), [&a](T& p){p*=a;});
   }
 
+//  Apply a scaling factor to one column elements
+  void scaleCol(const T a, const int ii)
+  {
+    std::for_each(&element(0,ii), &element(0,ii)+nrows, [&a](T& p){p*=a;});
+  }
+
 //  Print memory usage for all matrices
   void printMem() const
   {
@@ -160,6 +166,11 @@ public:
   matrixReal& operator*=(const double&);
   matrixReal& operator/=(const double&);
 
+//Vector-Vector Operations
+  double operator%(const matrixReal& o) const;
+  double dot(const int ii, const int jj) const;
+  double dot(const matrixReal& o, const int ii, const int jj) const;
+
 //BLAS and LAPACK routines
 //Diagonalize matrix, place eigenvalues in the vector prodived
 //NOTE: Assumes a symmetric matrix
@@ -171,6 +182,7 @@ public:
 //Note: This will be used as a shortcut to create a superblock matrix for small site matrices
 //This should NOT be used for larger systems as it is very memory intensive
   matrixReal kron(matrixReal &o) const;
+
   std::shared_ptr<matrixReal> getSub(int ii, int jj, int kk, int ll) const
   {
     return getSub_impl<matrixReal>(ii,jj,kk,ll);
