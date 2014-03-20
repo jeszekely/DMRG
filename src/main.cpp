@@ -90,24 +90,34 @@ int main(int argc, char const *argv[])
 
   //Implemented in shoddy, procedural style. Will improve later, once the math all works.
 
-  int maxKeepNum=20; //# maximum of eigenstates to keep
-  int maxChainLen=10;
+  int maxKeepNum=10; //# maximum of eigenstates to keep
+  int maxChainLen=20; //This means the entire thing is 20, so 10 on each side
 
-  block sysBlock(1, 2, maxKeepNum, sH1, sSp1, sSz1);
-  block envBlock(1, 2, maxKeepNum, eH1, eSp1, eSz1);
 
-  double error, energy;
+  vector <shared_ptr<block>> leftBlock(maxChainLen);
+  vector <shared_ptr<block>> rightBlock(maxChainLen);
 
-  for (int currentLen = 0; currentLen < maxChainLen; currentLen++){
-    cout << "System Length = " << 2*sysBlock.nSites+2 << endl;
-    
-    tie(error,energy)=sysBlock.infiniteDMRGStep(envBlock);
+  finiteSystem thing(maxChainLen, maxKeepNum, leftBlock, rightBlock);
+  thing.initializeBlocks();
+  #if 0
+    double error, energy;
+    block sysBlock(1, 2, maxKeepNum, sH1, sSp1, sSz1);
+    block envBlock(1, 2, maxKeepNum, eH1, eSp1, eSz1);
+    for (int currentLen = 0; 2*(currentLen+1) < maxChainLen; currentLen++){
+      cout << "System Length = " << 2*sysBlock.nSites+2 << endl;
+      
    
-    cout << "Truncation Error : " << error << endl;
-    cout << "E/L = " << std::setprecision(10) << energy/(sysBlock.nSites*2) << endl;
-    sysBlock.H->printMem();
-    cout << "******************************************************************************" << endl;
-  }
+      tie(error,energy)=sysBlock.infiniteDMRGStep(envBlock);
+    
+      envBlock = sysBlock; //Since we don't rotate/truncate the environment block, we just overwrite it with the sysblock
+
+
+      cout << "Truncation Error : " << error << endl;
+      cout << "E/L = " << std::setprecision(10) << energy/(sysBlock.nSites*2) << endl;
+      sysBlock.H->printMem();
+      cout << "******************************************************************************" << endl;
+    }
+  #endif 
 #endif
   return 0;
 }

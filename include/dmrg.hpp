@@ -11,11 +11,15 @@ public:
 	std::shared_ptr<matrixReal> Sz;
 	std::vector<matrixReal *> Ops; //operators for single site (initially)
 
+	//Constructor
 	block(int, int, int, std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>);
 	
+	//Copy Constructor
+	block(const block&);
+
 	void enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1);
 	void rotateTruncate(matrixReal& transformationMatrix);
-	void makeTransformationMatrix(matrixReal& reducedDM, block& environmentBlock);
+	void makeTransformationMatrix(matrixReal& reducedDM);
 
 	//Returns the ground state energy and the truncation error
 	std::tuple<double, double> infiniteDMRGStep(block& environmentBlock);
@@ -28,7 +32,13 @@ public:
 
 };
 
+class finiteSystem{
+public:
+	finiteSystem(int, int, std::vector<std::shared_ptr<block>>, std::vector<std::shared_ptr<block>>);
+	int sysLength;
+	int maxKeepNum;
+	std::vector<std::shared_ptr<block>> leftBlocks;
+	std::vector<std::shared_ptr<block>> rightBlocks;
 
-
-
-int dmrgInfiniteSystem(block& system, int L, int m);
+	void initializeBlocks();
+};
