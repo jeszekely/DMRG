@@ -59,7 +59,9 @@ double matrixReal::dot(const int ii, const int jj) const
 //vector dot product where vectors are two columns in separate matricies
 double matrixReal::dot(const matrixReal& o, const int ii, const int jj) const
 {
-  assert(ncols > ii && o.ncols > jj && nrows == o.nrows);
+  assert(ncols > ii);
+  assert(o.ncols > jj);
+  assert(nrows == o.nrows);
   return ddot_(nrows, &element(0,ii), 1, &o.element(0,jj), 1);
 }
 

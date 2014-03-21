@@ -4,36 +4,21 @@ class Davidson
 protected:
   const int nVec;
   const int sizeVec;
+  const int guessVec;
+  const double tolerance = 1.0e-8;
+  const int maxIter = 1000;
   std::function<matrixReal(matrixReal&)> H;
-  std::vector<std::shared_ptr<matrixReal>> Vecs;
+  std::vector<double> HDiag;
+  //std::vector<std::shared_ptr<matrixReal>> Vecs;
 
   //fill Vecs with proper starting guess
-  void initialize();
+  void initialize(matrixReal& V);
 public:
   //accepts the number of vectors, length of the vectors, and a lambda function describing the application of H
-  Davidson(int nV, int size, std::function<matrixReal(matrixReal&)> h);
-
-  //normalize the ith column of Vecs
-  void normalize(int i);
+  Davidson(const int nV, const int size, const int guess, std::vector<double>&, std::function<matrixReal(matrixReal&)> h);
 
   //Orthonormalize Vecs
-  void orthonorm();
+  void orthonorm(matrixReal& V);
 
-  void diagonalize();
+  std::shared_ptr<matrixReal> diagonalize(std::vector<double> &);
 };
-
-// Davidson algorithm:
-// Choose u1 with ||u1|| = 1, U1 = [u1]
-//for j = 1,2,...
-//  w^j = Au^j
-//  for k = 1,2,..j-1
-//    bkj = (u^k)^H w^j
-//    bjk = (u^j)^H w^k
-//  bjj = (u^j)^H w^J
-//  Compute largest eigenvalue of B, s, with eigenvector S, ||S|| = 1
-//  y = UjS
-//  y = Ay - sy
-//  t = (DA - sI)^-1 r
-//  t = t - UjUj^H t
-//  u^(j+1) = t/||t||
-//  U(j+1) = [Uj,u^(j+1)]

@@ -12,70 +12,96 @@
 
 using namespace std;
 
-Davidson::Davidson(const int nV, const int size, function<matrixReal(matrixReal&)> h) : nVec(min(2,nV)), sizeVec(size), H(h), Vecs(vector<shared_ptr<matrixReal>>(nV))
-{
-  for (shared_ptr<matrixReal>& v : Vecs)
-    v = make_shared<matrixReal>(sizeVec,1);
-  initialize();
-}
+Davidson::Davidson(const int nV, const int size, const int guess, vector<double>& HD, function<matrixReal(matrixReal&)> h) : nVec(max(nV,2)), sizeVec(size), guessVec(guess), H(h), HDiag(HD){}
 
-void Davidson::initialize()
+void Davidson::initialize(matrixReal& V)
 {
-  for (shared_ptr<matrixReal>& v : Vecs)
-  {
-    //Fill with random values then normalize to 1.0
-    //This is probably not ideal for a starting guess to the Davidson algorithm
-    v->random();
-    v->scale(1.0/sqrt((*v|*v)(0,0)));
-  }
-  orthonorm();
-  for (shared_ptr<matrixReal>& v : Vecs) cout << (*v|*v)(0,0) << endl;
+  V.random();
+  orthonorm(V);
+  for (int ii = 0; ii < V.nc(); ii++) cout << V.dot(ii,ii) << endl;
   return;
 }
 
-void Davidson::orthonorm()
+void Davidson::orthonorm(matrixReal& V)
 {
   //Orthogonalize via Gram-Schmidt
-  for (int ii = 1; ii < nVec; ii++)
+  for (int ii = 1; ii < V.nc(); ii++)
    {
     for (int jj = 0; jj < ii; jj++)
      {
-      const double factor = (*Vecs.at(ii)|*Vecs.at(jj))(0,0);
-       *(Vecs.at(ii)) -= *Vecs.at(jj)*factor;
+      const double factor = V.dot(ii,jj);
+        V.setSub(0,ii,*V.getSub(0,ii,V.nc(),1)-*V.getSub(0,jj,V.nc(),1)*factor);
      }
-     const double norm =  (*Vecs.at(ii)|*Vecs.at(ii))(0,0);
-     Vecs.at(ii)->scale(1.0/sqrt(norm));
+     const double norm =  V.dot(ii,ii);
+     V.scaleCol(1.0/sqrt(norm),ii);
    }
   //Normalize
-  for (shared_ptr<matrixReal>& v : Vecs)
-    v->scale(1.0/sqrt((*v|*v)(0,0)));
+  for (int ii = 0; ii < V.nc(); ii++)
+    V.scaleCol(1.0/sqrt(V.dot(ii,ii)),ii);
   return;
 }
 
 //Diagonalize matrix, return eigenvectors as columns of a matrixReal
-std::tuple<std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>> Davidson::diagonalize()
+std::shared_ptr<matrixReal> Davidson::diagonalize(vector<double>& outVals)
 {
-  for (shared_ptr<matrixReal>& v : Vecs)
+  int nevf = 0;
+  vector<int> isConv(nVec,0);
+
+//Initialize the guess matrix
+  auto T = make_shared<matrixReal>(sizeVec,guessVec);
+  initialize(*T);
+  auto V = make_shared<matrixReal>(*T);
+//Compute the subspace eigenpairs
+
+  //vector <double> * PrevEigVals;
+  for (int mm = guessVec; mm < maxIter; mm+=guessVec)
   {
-      cout << *v << endl;
+    auto Hk = make_shared<matrixReal>(T->nc(),T->nc());
+    auto Wk = make_shared<matrixReal>(sizeVec,guessVec);
+    for (int ii = 0; ii < T->nc(); ii++)
+    {
+      Wk->setSub(0,ii,H(*V->getSub(0,ii,V->nr(),1)));
+      for (int jj = 0; jj <= ii; jj++)
+      {
+        Hk->element(ii,jj) = Hk->element(jj,ii) = V->dot(*Wk->getSub(0,ii,V->nr(),1),jj,0);
+      }
+    }
+    vector<double> eigVals(Hk->nc(),0.0);
+    Hk->diagonalize(eigVals.data());
+    matrixReal psi = (*V)*(*Hk);
+    *Wk *= *Hk;
+
+//Calculate the residuals, check for convergence
+    auto R = make_shared<matrixReal>(*V);
+    for(int ii = 0; ii<R->nc(); ii++)
+    {
+      matrixReal ri = *psi.getSub(0,ii,psi.nr(),1)*eigVals.at(ii) - *Wk->getSub(0,ii,Wk->nr(),1);
+      R->setSub(0,ii,ri);
+      if (sqrt(R->dot(ii,ii)) < tolerance)
+      {
+        T->setSub(0,ii,*psi.getSub(0,ii,T->nr(),1));
+        outVals[ii] = eigVals[ii];
+        isConv[ii] = 1;
+      }
+    }
+
+//If all the requested vector are converged, exit for loop
+    nevf = accumulate(isConv.begin(),isConv.begin()+isConv.size(),0);
+    if (nevf >= nVec)
+    {
+      cout << "all is converged" << endl;
+      break;
+    }
+//Calculate the correction vectors
+    auto D = make_shared<matrixReal>(*R);
+    for (int ii = 0; ii < D->nc(); ii++)
+      //Correction vector function needs to go here
+      //Define D, append to set of vectors
   }
+
+
+  return T;
 }
 
-
-// Davidson algorithm:
-// Choose u1 with ||u1|| = 1, U1 = [u1]
-//for j = 1,2,...
-//  w^j = Au^j
-//  for k = 1,2,..j-1
-//    bkj = (u^k)^H w^j
-//    bjk = (u^j)^H w^k
-//  bjj = (u^j)^H w^J
-//  Compute largest eigenvalue of B, s, with eigenvector S, ||S|| = 1
-//  y = UjS
-//  y = Ay - sy
-//  t = (DA - sI)^-1 r
-//  t = t - UjUj^H t
-//  u^(j+1) = t/||t||
-//  U(j+1) = [Uj,u^(j+1)]
 
 
