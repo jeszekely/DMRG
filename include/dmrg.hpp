@@ -1,44 +1,49 @@
 //Given a Hamiltonian H, chain length L, vector set size m,
 //computes the energy of the chain using the inifinite DMRG algorithm
 //JL and JU are the lower and upper site coupling matrices
-class block{
+
+
+class infiniteSystem{
 public:
-	int nSites; //chain/number of sites
-	int basisSize; //number of m's to keep
-	int maxKeepNum; //maximum number of eigenvectors to keep
-	std::shared_ptr<matrixReal> H;
-	std::shared_ptr<matrixReal> Sp;
-	std::shared_ptr<matrixReal> Sz;
-	std::vector<matrixReal *> Ops; //operators for single site (initially)
-
+	int sysLength;
+	std::vector<int> sweepSizes; //for the infinite case it will only take the first value for this
 	//Constructor
-	block(int, int, int, std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>);
-	
-	//Copy Constructor
-	block(const block&);
+	infiniteSystem(int, std::vector<int>);
 
-	void enlarge(matrixReal &H1, matrixReal &Sp1, matrixReal &Sz1);
-	void rotateTruncate(matrixReal& transformationMatrix);
-	void makeTransformationMatrix(matrixReal& reducedDM);
+	void runInfinite();
 
 	//Returns the ground state energy and the truncation error
-	std::tuple<double, double> infiniteDMRGStep(block& environmentBlock);
+	std::tuple<double, double> infiniteDMRGStep(block& sysBlock, block& envBlock, int maxEigenStates);
+
+	std::tuple<std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>> makeSingleSiteOperators();
+
+	void enlarge(block& b);
 
 	//Returns the ground state energy and wavefunction 
-	std::tuple<double, std::shared_ptr<matrixReal>> buildSuperblock(block& envBlock);
+	std::tuple<double, std::shared_ptr<matrixReal>> buildSuperblock(block& sysBlock, block& envBlock);
 
 	//Returns the truncation error and the diagonalized reduced density matrix
-	std::tuple<double, std::shared_ptr<matrixReal>> makeReducedDM(matrixReal& groundWfxn);
+	std::tuple<double, std::shared_ptr<matrixReal>> makeReducedDM(int sysBasisSize, int envBasisSize, matrixReal& groundWfxn, int maxEigenStates);
+
+	//void rotateTruncate(matrixReal& transformationMatrix);
+	void makeTransformationMatrix(block& sysBlock, matrixReal& reducedDM, int maxEigenStates);
+
+	void graphics(int sysBlockLength, int envBlockLength, bool direction);
 
 };
 
-class finiteSystem{
+
+class finiteSystem : public infiniteSystem{
 public:
-	finiteSystem(int, int, std::vector<std::shared_ptr<block>>, std::vector<std::shared_ptr<block>>);
-	int sysLength;
-	int maxKeepNum;
+
+	//Constructor
+	finiteSystem(int, std::vector<int>);
+
 	std::vector<std::shared_ptr<block>> leftBlocks;
 	std::vector<std::shared_ptr<block>> rightBlocks;
 
-	void initializeBlocks();
+	std::tuple<std::vector<std::shared_ptr<block>>, std::vector<std::shared_ptr<block>>> initializeBlocks();
+	void sweep();
+	//void runFinite();
+
 };
