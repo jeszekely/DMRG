@@ -18,7 +18,7 @@ extern "C"
 //LAPACK
 extern "C"
 {
- void dgesvd_(const char*, const char*, const int*, const int*, double*, const int*, const double*, const double*, const int*, double*, const int*,  double*, const int*, int*);
+ void dgesvd_(const char*, const char*, const int*, const int*, double*, const int*, double*, double*, const int*, double*, const int*,  double*, const int*, int*);
 
  //void dsyevr_(const char*, const char*, const char*, const int*, double*, const int*, const double*, const double*, const int*, const int*, const double*,  int*, double*, double*, const int*, int*, double*, int*, double*, int*, int*);
 }
@@ -48,9 +48,9 @@ namespace
   void mkl_domatcopy_(const char* ordering, const char* trans, const int r, const int c, const double alpha,
                     const double* A, const int nr, double* B, const int nc)
                     {mkl_domatcopy(*ordering,*trans,r,c,alpha,A,nr,B,nc);}
-  void dsyevr_(const char* jobz, const char* range, const char* uplo, const int n, double* a, const int lda, const double vl,
-                const double vu, const int il, const int iu, const double abstol, int m, double* w, double* z, const int ldz,
-                int* isuppz, double* work, int lwork, int* iwork, int liwork, int info)
+  void dsyevr_(const char* jobz, const char* range, const char* uplo, const int n, double* a, const int lda, double vl,
+                 double vu, const int il, const int iu, const double abstol, int m, double* w, double* z, const int ldz,
+                int* isuppz, double* work, int lwork, int* iwork, int liwork, int& info)
                 { ::dsyevr_(jobz, range, uplo, &n, a, &lda, &vl, &vu, &il, &iu, &abstol, &m, w, z, &ldz, isuppz, work, &lwork, iwork, &liwork, &info);}
                   
 }

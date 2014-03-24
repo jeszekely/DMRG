@@ -166,7 +166,9 @@ std::tuple<double, std::shared_ptr<matrixReal>> infiniteSystem::buildSuperblock(
 
 	// *** Diagonalize the Superblock and get the eigenvalues ***
 	vector <double> superBlockVals(enlargedSysBlock.basisSize*enlargedEnvBlock.basisSize,0.0);
-	superBlock->diagonalize(superBlockVals.data());
+	//superBlock->diagonalize(superBlockVals.data());
+
+	superBlock->diagonalize(superBlockVals.data(),1,1);
 
 	// *** Get the ground state of the diagonalized superblock
 	auto groundState = make_shared<matrixReal>(*superBlock->getSub(0,0,enlargedSysBlock.basisSize*enlargedEnvBlock.basisSize,1));
