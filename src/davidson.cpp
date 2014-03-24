@@ -3,9 +3,7 @@
 #include <complex>
 #include <memory>
 #include <algorithm>
-#include <string>
 #include <vector>
-#include <memory>
 
 #include "matrix.hpp"
 #include "davidson.hpp"
@@ -57,7 +55,7 @@ std::shared_ptr<matrixReal> Davidson::diagonalize(vector<double>& outVals)
   for (int mm = guessVec; mm < maxIter; mm+=guessVec)
   {
     auto Hk = make_shared<matrixReal>(T->nc(),T->nc());
-    auto Wk = make_shared<matrixReal>(sizeVec,guessVec);
+    auto Wk = make_shared<matrixReal>(sizeVec,T->nc());
     for (int ii = 0; ii < T->nc(); ii++)
     {
       Wk->setSub(0,ii,H(*V->getSub(0,ii,V->nr(),1)));
@@ -95,8 +93,19 @@ std::shared_ptr<matrixReal> Davidson::diagonalize(vector<double>& outVals)
 //Calculate the correction vectors
     auto D = make_shared<matrixReal>(*R);
     for (int ii = 0; ii < D->nc(); ii++)
-      //Correction vector function needs to go here
-      //Define D, append to set of vectors
+    {
+      matrixReal Di(D->nr(),1);
+      for (int jj = 0; jj < Di.nr(); jj++)
+        Di(jj,0) = R->element(jj,ii)/(eigVals[ii]-HDiag[jj]);
+      D->setSub(0,ii,Di);
+    }
+
+  //auto V = make_shared<matrixReal>(*T);
+    auto Tnew = make_shared<matrixReal>(T->nr(), T->nc()+D->nc());
+    Tnew->setSub(0,0,*V);
+    Tnew->setSub(0,V->nc(),*D);
+    *T = *Tnew;
+    //Define D, append to set of vectors
   }
 
 
