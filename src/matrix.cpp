@@ -134,6 +134,7 @@ void matrixReal::diagonalize(double* eigVals, bool getLowEigVal, int keepNum)
 {
   assert (nrows == ncols);
   int info,iwork;
+  double work;
   int lwork = -1;
   int liwork = -1;
   double abstol = 1.0e-8;
@@ -152,7 +153,7 @@ void matrixReal::diagonalize(double* eigVals, bool getLowEigVal, int keepNum)
   }
   dsyevr_("V", "I", "U", nrows, data(), nrows, -20394857.0, 2345.2, il, iu, abstol, keepNum, eigVals, workEigVecs.data(), nrows, isuppz.data(), &work, lwork, &iwork, liwork, info);
   lwork = work;
-  std::unique_ptr <double[]> workArray(new double [work]);
+  std::unique_ptr <double[]> workArray(new double [int(work)]);
   liwork = iwork;
   std::unique_ptr <double[]> iworkArray(new double [iwork]);
   dsyevr_("V", "I", "U", nrows, data(), nrows, -20394857.0, 2345.2, il, iu, abstol, keepNum, eigVals, workEigVecs.data(), nrows, isuppz.data(), workArray.get(), lwork, iworkArray.get(), liwork, info);
