@@ -60,14 +60,14 @@ std::tuple<double, double> infiniteSystem::infiniteDMRGStep(block& sysBlock, blo
 	//*** Build the Superblock and get the ground state energy and wavefunction***
 	double energy, error;
 
-	
+
 
  	enlarge(sysBlock);
     enlarge(envBlock);
-    
+
     shared_ptr<matrixReal> groundState;
     tie(energy,groundState) = buildSuperblock(sysBlock, envBlock);
-    
+
     shared_ptr<matrixReal> reducedDM;
     tie(error,reducedDM)= makeReducedDM(sysBlock.basisSize, envBlock.basisSize, *groundState,maxEigenStates);
 
@@ -76,8 +76,8 @@ std::tuple<double, double> infiniteSystem::infiniteDMRGStep(block& sysBlock, blo
     makeTransformationMatrix(sysBlock, *reducedDM,maxEigenStates);
     envBlock = sysBlock; //Since we don't rotate/truncate the environment block, we just overwrite it with the sysblock
 
-    
-	return make_tuple(error, energy); 
+
+	return make_tuple(error, energy);
 }
 
 std::tuple<std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>> infiniteSystem::makeSingleSiteOperators()
@@ -99,7 +99,7 @@ void infiniteSystem::enlarge(block& b)
 {
     shared_ptr<matrixReal> H1, Sp1, Sz1;
     tie(H1, Sp1, Sz1) = makeSingleSiteOperators();
-	
+
 
 	//H1, Sz1, and Sp1 all refer to the original, 2x2 matrices. They should never change.
 	//construct identity matrix for upscaling stuff
@@ -115,7 +115,7 @@ void infiniteSystem::enlarge(block& b)
 	//antiferromagnetic case
 	double J = 1;
 	double Jz = 1;
-	
+
 	auto newH = make_shared<matrixReal>(singleSiteBasis*b.basisSize, singleSiteBasis*b.basisSize);
 	//See Chapter 2 The Density Matrix Renormalization Group (Adrian E. Feiguin) eq. 2.6, 2.8, 2.11
 	*newH = b.H->kron(smallIdent) //H x I_2
@@ -182,12 +182,12 @@ std::tuple<double, std::shared_ptr<matrixReal>> infiniteSystem::makeReducedDM(in
 
     const int environment_basis = groundWfxn.size()/sysBasisSize;
     assert (environment_basis == envBasisSize);
-    
+
 
 	auto squarePsi = make_shared<matrixReal>(sysBasisSize,sysBasisSize);
     //We transpose the first matrix. Basically, the 2nd index is the one that moves first (a consequence of the way the kronecker product is written)
 	dgemm_("T", "N", sysBasisSize, sysBasisSize, envBasisSize, 1.0, groundWfxn.data(), envBasisSize, groundWfxn.data(), envBasisSize, 0.0, squarePsi->data(), sysBasisSize);
-	
+
 	// *** Diagonalize the Reduced DM, and get the eigenvalues ***
     vector <double> reducedDMVals(sysBasisSize,0.0);
     squarePsi->diagonalize(reducedDMVals.data());
@@ -201,10 +201,10 @@ std::tuple<double, std::shared_ptr<matrixReal>> infiniteSystem::makeReducedDM(in
 
 
 void infiniteSystem::makeTransformationMatrix(block& sysBlock, matrixReal& reducedDM, int maxEigenStates)
-{	
+{
 	// *** Make the Transformation Matrix ***
 	int	actualKeepNum = min(maxEigenStates, sysBlock.basisSize);
-	
+
 	// *** Extract the transformation matrix from the right hand side of the reduced DM
 	auto transformationMatrix = reducedDM.getSub(0,sysBlock.basisSize-actualKeepNum,sysBlock.basisSize,actualKeepNum);
 
@@ -214,39 +214,17 @@ void infiniteSystem::makeTransformationMatrix(block& sysBlock, matrixReal& reduc
 	sysBlock.basisSize=actualKeepNum;
 
 
-	return; 
+	return;
 }
 
 void infiniteSystem::graphics(int sysBlockLength, int envBlockLength, bool direction)
 {
-	int leftLen, rightLen;
-	string leftChar, rightChar;
-
-	if (direction){ //System on the left
-		leftLen=sysBlockLength;
-		leftChar = "=";
-
-		rightLen=envBlockLength;
-		rightChar= "-";
-	} else { //System on the right
-		leftLen=envBlockLength;
-		leftChar= "-";
-
-		rightLen=sysBlockLength;
-		rightChar= "=";
-	}
-
-	for (int leftCount = 0; leftCount < leftLen; leftCount++)
-	{	
-		cout << leftChar;
-	}
-	cout << "**";
-	for (int rightCount = 0; rightCount < rightLen; rightCount++)
-	{	
-		cout << rightChar;
-	}
-	cout <<endl;
-	return;
+	string DMRGState;
+	DMRGState.append(size_t(sysBlockLength),'=');
+	DMRGState.append("**");
+	DMRGState.append(size_t(envBlockLength),'-');
+	if (!direction) DMRGState = string(DMRGState.rbegin(),DMRGState.rend());
+	cout << DMRGState << endl;
 }
 
 //***************************************************************************
@@ -263,7 +241,7 @@ std::tuple< vector<std::shared_ptr<block>>, vector<std::shared_ptr<block>>> fini
  	tie(H, Sp, Sz) = makeSingleSiteOperators();
 	//Might need these separate, not sure yet
 	tie(eH, eSp, eSz) = makeSingleSiteOperators();
-	
+
 	double energy, error;
 
 	vector <shared_ptr<block>> leftBlocks(sysLength);
@@ -280,9 +258,9 @@ std::tuple< vector<std::shared_ptr<block>>, vector<std::shared_ptr<block>>> fini
 
 	 	cout << "System Length = " << 2*newLeftBlock.nSites+2 << endl;
 	    graphics(newLeftBlock.nSites, newRightBlock.nSites, 1);
-	    //** This expands both the left and right block, which we need to assign to 
+	    //** This expands both the left and right block, which we need to assign to
 	    tie(error,energy)=infiniteDMRGStep(newLeftBlock, newRightBlock, sweepSizes.front()); //the initial step currently uses the first value in sweepSizes
-	    
+
 	    cout << "Truncation Error : " << error << endl;
 	    cout << "E/L = " << std::setprecision(10) << energy/(newLeftBlock.nSites*2) << endl;
 	    //newLeftBlock.H->printMem();
@@ -297,8 +275,8 @@ std::tuple< vector<std::shared_ptr<block>>, vector<std::shared_ptr<block>>> fini
 
 	return make_tuple(*sysList, *envList);
 
-	
-	
+
+
 }
 void finiteSystem::sweep()
 {
@@ -321,8 +299,8 @@ void finiteSystem::sweep()
 	    {
 	    	//get the envBlock corresponding to the current sysBlock
 	    	block envBlock(*envList.at(sysLength-sysBlock.nSites-3)); // -2 for the 2 active sites, -1 for the 0 based array we use
-	    	
-	   		
+
+
 	    	if (envBlock.nSites == 1)
 	    	{ //swap
 	    		std::swap(sysList, envList);
