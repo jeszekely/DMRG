@@ -129,6 +129,40 @@ void matrixReal::diagonalize(double* eigVals)
   return;
 }
 
+
+void matrixReal::diagonalize(double* eigVals, bool getLowEigVal, int keepNum)
+{
+  assert (nrows == ncols);
+  int info,iwork;
+  int lwork = -1;
+  int liwork = -1;
+  double abstol = 1.0e-8;
+  int il, iu;
+  matrixReal workEigVecs(nrows,keepNum);
+  vector<int> isuppz(std::max(1,keepNum,0));
+  if (getLowEigVal)
+  {
+      il = 0;
+      iu = keepNum;
+  }
+  else
+  {
+      il = nrows - keepNum;
+      iu = nrows;
+  }
+  dsyevr_("V", "I", "U", nrows, data(), nrows, -20394857.0, 2345.2, il, iu, abstol, keepNum, eigVals, workEigVecs.data(), nrows, isuppz.data(), &work, lwork, &iwork, liwork, info);
+  lwork = work;
+  std::unique_ptr <double[]> workArray(new double [work]);
+  liwork = iwork;
+  std::unique_ptr <double[]> iworkArray(new double [iwork]);
+  dsyevr_("V", "I", "U", nrows, data(), nrows, -20394857.0, 2345.2, il, iu, abstol, keepNum, eigVals, workEigVecs.data(), nrows, isuppz.data(), workArray.get(), lwork, iworkArray.get(), liwork, info);
+  if (info > 0)
+    throw std::runtime_error("Unable to diagonalize matrix with dyevr_");
+  zero();
+  setSub(0,0,workEigVecs);
+  return;
+}
+
 std::shared_ptr<matrixReal> matrixReal::transpose() const
 {
   auto out = make_shared<matrixReal> (ncols,nrows);
