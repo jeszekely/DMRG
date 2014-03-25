@@ -165,7 +165,8 @@ std::tuple<double, std::shared_ptr<matrixReal>> infiniteSystem::buildSuperblock(
 							+(enlargedSysBlock.Sz->kron(*enlargedEnvBlock.Sz))*Jz; // ( sysSz x envSz ) Jz
 
 	// *** Diagonalize the Superblock and get the eigenvalues ***
-	vector <double> superBlockVals(enlargedSysBlock.basisSize*enlargedEnvBlock.basisSize,0.0);
+	//vector <double> superBlockVals(enlargedSysBlock.basisSize*enlargedEnvBlock.basisSize,0.0);
+	vector <double> superBlockVals(1,0.0);
 	//superBlock->diagonalize(superBlockVals.data());
 
 	superBlock->diagonalize(superBlockVals.data(),1,1);

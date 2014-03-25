@@ -28,7 +28,7 @@ typedef std::complex<double> cplx;
 int main(int argc, char const *argv[])
 {
   int maxChainLen=20; //This means the entire thing is 20, so 10 on each side
-  vector<int> maxKeepNum = {10, 20, 30, 40, 40};
+  vector<int> maxKeepNum = {10, 20, 30};
 
   infiniteSystem infChain(maxChainLen, maxKeepNum);
 

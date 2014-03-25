@@ -149,7 +149,7 @@ void matrixReal::diagonalize(double* eigVals, bool getLowEigVal, int keepNum)
   }
   else
   {
-      il = nrows - keepNum;
+      il = nrows - keepNum + 1;
       iu = nrows;
   }
   dsyevr_("V", "I", "U", nrows, data(), nrows, -20394857.0, 2345.2, il, iu, abstol, keepNum, eigVals, workEigVecs.data(), nrows, isuppz.data(), &work, lwork, &iwork, liwork, info);
