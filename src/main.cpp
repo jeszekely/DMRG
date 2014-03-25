@@ -1,14 +1,12 @@
 #include <iostream>
 #include <cmath>
-#include <complex>
-#include <memory>
 #include <algorithm>
 #include <vector>
 
 #include "matrix.hpp"
+#include "block.hpp"
 #include "dmrg.hpp"
 #include "davidson.hpp"
-
 // #include <boost/algorithm/string.hpp>
 // #include <boost/property_tree/ptree.hpp>
 // #include <boost/property_tree/json_parser.hpp>
@@ -16,11 +14,10 @@
 
 using namespace std;
 
-typedef std::complex<double> cplx;
-
 int main(int argc, char const *argv[])
 {
-#if 1
+
+#if 0
   matrixReal M(5,6);
   M.makeIdentity();
   M(2,1) = 10.0;
@@ -67,46 +64,12 @@ int main(int argc, char const *argv[])
   Diag.diagonalize(EVals);
 #endif
 
-#if 0
-  //these are the initial matrices for H, Sp, and Sz, and WILL be changed by the enlarge function
-  std::shared_ptr<matrixReal> H1(new matrixReal(2,2));
-  auto sH1 = make_shared<matrixReal>(*H1);
-  auto eH1 = make_shared<matrixReal>(*H1);
-
-  std::shared_ptr<matrixReal> Sp1(new matrixReal(2,2));
-  Sp1->element(0,1) = 1.0;
-  auto sSp1 = make_shared<matrixReal>(*Sp1);
-  auto eSp1 = make_shared<matrixReal>(*Sp1);
-
-  std::shared_ptr<matrixReal> Sz1(new matrixReal(2,2));
-  Sz1->element(0,0) = 0.5;
-  Sz1->element(1,1) = -0.5;
-  auto sSz1 = make_shared<matrixReal>(*Sz1);
-  auto eSz1 = make_shared<matrixReal>(*Sz1);
-
-
-
-
-  //Implemented in shoddy, procedural style. Will improve later, once the math all works.
-
-  int maxKeepNum=20; //# maximum of eigenstates to keep
-  int maxChainLen=10;
-
-  block sysBlock(1, 2, maxKeepNum, sH1, sSp1, sSz1);
-  block envBlock(1, 2, maxKeepNum, eH1, eSp1, eSz1);
-
-  double error, energy;
-
-  for (int currentLen = 0; currentLen < maxChainLen; currentLen++){
-    cout << "System Length = " << 2*sysBlock.nSites+2 << endl;
-
-    tie(error,energy)=sysBlock.infiniteDMRGStep(envBlock);
-
-    cout << "Truncation Error : " << error << endl;
-    cout << "E/L = " << std::setprecision(10) << energy/(sysBlock.nSites*2) << endl;
-    sysBlock.H->printMem();
-    cout << "******************************************************************************" << endl;
-  }
+#if 1
+  int maxChainLen=20; //This means the entire thing is 20, so 10 on each side
+  vector<int> maxKeepNum = {10, 20, 30};
+  finiteSystem finiteChain(maxChainLen, maxKeepNum);
+  finiteChain.sweep();
 #endif
+
   return 0;
 }

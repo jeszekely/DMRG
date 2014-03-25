@@ -175,6 +175,7 @@ public:
 //Diagonalize matrix, place eigenvalues in the vector prodived
 //NOTE: Assumes a symmetric matrix
   void diagonalize(double* eigVals);
+  void diagonalize(double* eigVals, bool getLowEigVal, int keepNum);
   std::shared_ptr<matrixReal> transpose() const;
   std::tuple<std::shared_ptr<matrixReal>, std::shared_ptr<matrixReal>>svd(std::vector<double>&);
 

@@ -21,6 +21,8 @@ extern "C"
 extern "C"
 {
  void dgesvd_(const char*, const char*, const int*, const int*, double*, const int*, double*, double*, const int*, double*, const int*,  double*, const int*, int*);
+
+ //void dsyevr_(const char*, const char*, const char*, const int*, double*, const int*, const double*, const double*, const int*, const int*, const double*,  int*, double*, double*, const int*, int*, double*, int*, double*, int*, int*);
 }
 
 //DMRG interface, shamelessly lifted from BAGEL's src/util/f77.h file
@@ -53,6 +55,11 @@ namespace
 
   double ddot_(const int a, const std::unique_ptr<double []>& b, const int c, const std::unique_ptr<double []>& d, const int e)
              { return ::ddot_(&a,b.get(),&c,d.get(),&e); }
+
+  void dsyevr_(const char* jobz, const char* range, const char* uplo, const int n, double* a, const int lda, double vl,
+                 double vu, const int il, const int iu, const double abstol, int m, double* w, double* z, const int ldz,
+                int* isuppz, double* work, int lwork, int* iwork, int liwork, int& info)
+                { ::dsyevr_(jobz, range, uplo, &n, a, &lda, &vl, &vu, &il, &iu, &abstol, &m, w, z, &ldz, isuppz, work, &lwork, iwork, &liwork, &info);}
 
 }
 

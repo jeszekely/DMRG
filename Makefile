@@ -5,16 +5,18 @@
 CC = g++
 
 #MKLROOT = /opt/intel/composer_xe_2013_sp1/mkl
+#CC = /usr/local/Cellar/gcc49/4.9-20140119/bin/g++-4.9
 
 CFLAGS = -O3 -I$(MKLROOT)/include -Wall -Wno-sign-compare -Wno-unused-function -Werror -std=c++11 -openmp
 
 BOOST_INC = -I/opt/local/include/
 
-OBJ  =   obj/main.o  obj/matrix.o obj/dmrg.o obj/davidson.o
+OBJ  =   obj/main.o  obj/matrix.o obj/dmrg.o obj/davidson.o obj/block.o
 
 LIBS =  -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -lmkl_sequential -lpthread -lm
 
-HEADS =  include/matrix.hpp include/utilities.hpp include/dmrg.hpp include/davidson.hpp
+HEADS =  include/matrix.hpp include/utilities.hpp include/dmrg.hpp include/davidson.hpp include/block.hpp
+BIN  =   DMRG
 BIN  =   DMRG
 
 RM = rm -f
@@ -39,3 +41,6 @@ obj/dmrg.o: src/dmrg.cpp
 
 obj/davidson.o: src/davidson.cpp
 	$(CC) $(CFLAGS)  -c src/davidson.cpp  -o obj/davidson.o  -I./include
+
+obj/block.o: src/block.cpp
+	$(CC) $(CFLAGS)  -c src/block.cpp  -o obj/block.o  -I./include

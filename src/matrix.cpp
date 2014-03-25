@@ -1,16 +1,9 @@
 #include <iostream>
 #include <cmath>
-#include <complex>
-#include <memory>
 #include <algorithm>
 #include <stdexcept>
-
-#include <iomanip>
-#include <cstdlib>
-#include <ctime>
 #include <string>
 #include <vector>
-#include <memory>
 
 #include "matrix.hpp"
 #include "utilities.hpp"
@@ -157,27 +150,31 @@ void matrixReal::diagonalize(double* eigVals, bool getLowEigVal, int keepNum)
 {
   assert (nrows == ncols);
   int info,iwork;
+  double work;
+
   int lwork = -1;
   int liwork = -1;
   double abstol = 1.0e-8;
   int il, iu;
   matrixReal workEigVecs(nrows,keepNum);
-  vector<int> isuppz(std::max(1,keepNum,0));
+  vector<int> isuppz(std::max(1,keepNum),0);
   if (getLowEigVal)
   {
-      il = 0;
+      il = 1;
       iu = keepNum;
   }
   else
   {
-      il = nrows - keepNum;
+      il = nrows - keepNum + 1;
       iu = nrows;
   }
   dsyevr_("V", "I", "U", nrows, data(), nrows, -20394857.0, 2345.2, il, iu, abstol, keepNum, eigVals, workEigVecs.data(), nrows, isuppz.data(), &work, lwork, &iwork, liwork, info);
   lwork = work;
-  std::unique_ptr <double[]> workArray(new double [work]);
+
+  std::unique_ptr <double[]> workArray(new double [int(work)]);
   liwork = iwork;
-  std::unique_ptr <double[]> iworkArray(new double [iwork]);
+  std::unique_ptr <int[]> iworkArray(new int [iwork]);
+
   dsyevr_("V", "I", "U", nrows, data(), nrows, -20394857.0, 2345.2, il, iu, abstol, keepNum, eigVals, workEigVecs.data(), nrows, isuppz.data(), workArray.get(), lwork, iworkArray.get(), liwork, info);
   if (info > 0)
     throw std::runtime_error("Unable to diagonalize matrix with dyevr_");
