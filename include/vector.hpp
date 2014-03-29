@@ -1,0 +1,40 @@
+#ifndef DMRG_VECTOR
+#define DMRG_VECTOR
+
+#include <memory>
+#include <algorithm>
+#include <iostream>
+#include <iomanip>
+#include <assert.h>
+#include <random>
+
+#include "matrix.hpp"
+#include "utilities.hpp"
+
+class vectorMatrix : public matrixReal
+{
+public:
+  vectorMatrix(const int nr, const int nc);
+  vectorMatrix(const vectorMatrix&);
+  vectorMatrix(vectorMatrix&&);
+  vectorMatrix(const matrixReal&);
+  vectorMatrix(matrixReal&&);
+
+//Vector-Vector Operations
+  double dot(const int ii, const int jj) const;
+  double dot(const vectorMatrix& o, const int ii, const int jj) const;
+
+  void scaleVec(const int n, const double factor);
+
+  void normalize(const int n, const double scale);
+  void normalize(const int n);
+  void normalizeAll();
+
+  void orthonorm(int n);
+  void orthonormAll();
+
+  matrixReal vec(const int vecN);
+  void diagonalizeSub(double* eigVals,int nr, int nc);
+
+};
+#endif
