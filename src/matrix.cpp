@@ -42,22 +42,6 @@ double matrixReal::operator%(const matrixReal& o) const
   return ddot_(nrows, data(), 1, o.data(), 1);
 }
 
-//vector dot product where vectors are two columns in matrix
-double matrixReal::dot(const int ii, const int jj) const
-{
-  assert(ncols > max(ii,jj));
-  return ddot_(nrows, &element(0,ii), 1, &element(0,jj), 1);
-}
-
-//vector dot product where vectors are two columns in separate matricies
-double matrixReal::dot(const matrixReal& o, const int ii, const int jj) const
-{
-  assert(ncols > ii);
-  assert(o.ncols > jj);
-  assert(nrows == o.nrows);
-  return ddot_(nrows, &element(0,ii), 1, &o.element(0,jj), 1);
-}
-
 //Matrix multiplication, left matrix is transposed
 matrixReal matrixReal::operator|(const matrixReal& o) const
 {
@@ -220,6 +204,12 @@ matrixReal matrixReal::kron(matrixReal &o) const
     }
   }
   return out;
+}
+
+void matrixReal::ax_plus_y(const double a, matrixReal &o)
+{
+  assert(nrows*ncols == o.nrows*o.ncols);
+  daxpy_(size(), a, data(), 1, o.data(), 1);
 }
 
   //  Hermitian Conjugate

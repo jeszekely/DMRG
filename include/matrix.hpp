@@ -103,12 +103,6 @@ public:
     std::for_each(data(), data()+size(), [&a](T& p){p*=a;});
   }
 
-//  Apply a scaling factor to one column elements
-  void scaleCol(const T a, const int ii)
-  {
-    std::for_each(&element(0,ii), &element(0,ii)+nrows, [&a](T& p){p*=a;});
-  }
-
 //  Print memory usage for all matrices
   void printMem() const
   {
@@ -168,8 +162,6 @@ public:
 
 //Vector-Vector Operations
   double operator%(const matrixReal& o) const;
-  double dot(const int ii, const int jj) const;
-  double dot(const matrixReal& o, const int ii, const int jj) const;
 
 //BLAS and LAPACK routines
 //Diagonalize matrix, place eigenvalues in the vector prodived
@@ -188,6 +180,8 @@ public:
   {
     return getSub_impl<matrixReal>(ii,jj,kk,ll);
   }
+
+  void ax_plus_y(const double a, matrixReal &o);
 };
 
 //Overload the << operator to print a matrix

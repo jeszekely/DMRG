@@ -15,6 +15,8 @@ extern "C"
   void dsyev_(const char*, const char*, const int*, double*, const int*, double*, double*, const int*, int*);
 
   double ddot_(const int*, const double*, const int*, const double*, const int*);
+
+  void daxpy_(const int*, const double*, const double*, const int*, double*, const int*);
 }
 
 //LAPACK
@@ -60,6 +62,8 @@ namespace
                  double vu, const int il, const int iu, const double abstol, int m, double* w, double* z, const int ldz,
                 int* isuppz, double* work, int lwork, int* iwork, int liwork, int& info)
                 { ::dsyevr_(jobz, range, uplo, &n, a, &lda, &vl, &vu, &il, &iu, &abstol, &m, w, z, &ldz, isuppz, work, &lwork, iwork, &liwork, &info);}
+
+  void daxpy_(const int a, const double b, const double* c, const int d, double* e, const int f) { ::daxpy_(&a,&b,c,&d,e,&f); }
 
 }
 

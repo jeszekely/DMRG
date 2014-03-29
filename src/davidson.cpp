@@ -9,107 +9,62 @@
 
 using namespace std;
 
-Davidson::Davidson(const int nV, const int size, const int guess, vector<double>& HD, function<matrixReal(matrixReal&)> h) : nVec(max(nV,2)), sizeVec(size), guessVec(guess), H(h), HDiag(HD){}
+genMatrix::genMatrix(size_t nr, size_t nc, std::function<vectorMatrix(vectorMatrix&)> h, vector<double> &Diag) : nrows(nr), ncols(nc), H(h),diags(Diag) {}
 
-void Davidson::initialize(matrixReal& V)
+double genMatrix::diagElem(int ii) {return diags[ii];}
+
+int genMatrix::nc() {return ncols;}
+
+int genMatrix::nr() {return nrows;}
+
+vectorMatrix genMatrix::operator*(vectorMatrix& o){return H(o);}
+
+Davidson::Davidson(genMatrix h, int iVecs, int nVecs, int maxIts, double err) : H(h), initialVecs(iVecs), numVecs(nVecs), maxIterations(maxIts), tolerance(err) {}
+
+tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
 {
-  V.random();
-  orthonorm(V);
-  for (int ii = 0; ii < V.nc(); ii++) cout << V.dot(ii,ii) << endl;
-  return;
-}
+  int n = H.nr(); //Size of a vector
+  int mmax = n/2; //Maximum iterations
 
-void Davidson::orthonorm(matrixReal& V)
-{
-  //Orthogonalize via Gram-Schmidt
-  for (int ii = 1; ii < V.nc(); ii++)
-   {
-    for (int jj = 0; jj < ii; jj++)
-     {
-      const double factor = V.dot(ii,jj);
-        V.setSub(0,ii,*V.getSub(0,ii,V.nc(),1)-*V.getSub(0,jj,V.nc(),1)*factor);
-     }
-     const double norm =  V.dot(ii,ii);
-     V.scaleCol(1.0/sqrt(norm),ii);
-   }
-  //Normalize
-  for (int ii = 0; ii < V.nc(); ii++)
-    V.scaleCol(1.0/sqrt(V.dot(ii,ii)),ii);
-  return;
-}
+  //initial guess set to unit vectors
+  vectorMatrix t(n,initialVecs);
+  t.makeIdentity();
 
-//Diagonalize matrix, return eigenvectors as columns of a matrixReal
-std::shared_ptr<matrixReal> Davidson::diagonalize(vector<double>& outVals)
-{
-  int nevf = 0;
-  vector<int> isConv(nVec,0);
+  //Array to hold guess vectors
+  vectorMatrix V(n,n);
 
-//Initialize the guess matrix
-  auto T = make_shared<matrixReal>(sizeVec,guessVec);
-  initialize(*T);
-  auto V = make_shared<matrixReal>(*T);
-//Compute the subspace eigenpairs
+  //eigenvector and eigenvalue return arrays
+  auto eigVecs = make_shared<vectorMatrix>(n,numVecs);
+  vector<double> eigVals(numVecs,1.0);
+  vector<double> theta_old(eigVals);
 
-  //vector <double> * PrevEigVals;
-  for (int mm = guessVec; mm < maxIter; mm+=guessVec)
+  vectorMatrix Ht = H*t; //matrix acting on test vectors
+
+  for (int m = initialVecs; m < mmax; m+=initialVecs)
   {
-    auto Hk = make_shared<matrixReal>(T->nc(),T->nc());
-    auto Wk = make_shared<matrixReal>(sizeVec,T->nc());
-    for (int ii = 0; ii < T->nc(); ii++)
+    if (m <= initialVecs)
     {
-      Wk->setSub(0,ii,H(*V->getSub(0,ii,V->nr(),1)));
-      for (int jj = 0; jj <= ii; jj++)
-      {
-        Hk->element(ii,jj) = Hk->element(jj,ii) = V->dot(*Wk->getSub(0,ii,V->nr(),1),jj,0);
-      }
+      V.setSub(0,0,t);
     }
-    vector<double> eigVals(Hk->nc(),0.0);
-    Hk->diagonalize(eigVals.data());
-    matrixReal psi = (*V)*(*Hk);
-    *Wk *= *Hk;
-
-//Calculate the residuals, check for convergence
-    auto R = make_shared<matrixReal>(*V);
-    for(int ii = 0; ii<R->nc(); ii++)
+    else if (m > initialVecs) copy_n(eigVals.data(),numVecs,theta_old.data());
+    vectorMatrix T = (t|Ht);
+    vector<double> TeigVals(T.nc(),0.0);
+    T.diagonalize(TeigVals.data());
+    for (int jj = 0; jj<initialVecs; jj++)
     {
-      matrixReal ri = *psi.getSub(0,ii,psi.nr(),1)*eigVals.at(ii) - *Wk->getSub(0,ii,Wk->nr(),1);
-      R->setSub(0,ii,ri);
-      if (sqrt(R->dot(ii,ii)) < tolerance)
-      {
-        T->setSub(0,ii,*psi.getSub(0,ii,T->nr(),1));
-        outVals[ii] = eigVals[ii];
-        isConv[ii] = 1;
-      }
+      vectorMatrix r = Ht*T - *V.getSub(0,0,V.nr(),m+1)*T*TeigVals[jj];
+      eigVecs->setSub(0,jj,*V.getSub(0,0,V.nr(),m+1)*T);
+      vectorMatrix q(r);
+      for (int kk = 0; kk < q.nr(); kk++)
+        q(kk,0) = (1.0/(TeigVals[jj] - H.diagElem(kk)))*q(kk,0);
+      V.setSub(0,m+1+jj,q);
     }
-
-//If all the requested vector are converged, exit for loop
-    nevf = accumulate(isConv.begin(),isConv.begin()+isConv.size(),0);
-    if (nevf >= nVec)
-    {
-      cout << "all is converged" << endl;
-      break;
-    }
-//Calculate the correction vectors
-    auto D = make_shared<matrixReal>(*R);
-    for (int ii = 0; ii < D->nc(); ii++)
-    {
-      matrixReal Di(D->nr(),1);
-      for (int jj = 0; jj < Di.nr(); jj++)
-        Di(jj,0) = R->element(jj,ii)/(eigVals[ii]-HDiag[jj]);
-      D->setSub(0,ii,Di);
-    }
-
-  //auto V = make_shared<matrixReal>(*T);
-    auto Tnew = make_shared<matrixReal>(T->nr(), T->nc()+D->nc());
-    Tnew->setSub(0,0,*V);
-    Tnew->setSub(0,V->nc(),*D);
-    *T = *Tnew;
-    //Define D, append to set of vectors
+    double norm = 0.0;
+    for (int jj = 0; jj < numVecs; jj++)
+      norm += abs(pow(theta_old[jj] - eigVals[jj],2));
+    norm = sqrt(norm);
+    if (norm < tolerance) break;
   }
 
-
-  return T;
+  return make_tuple(eigVecs,eigVals);
 }
-
-
-
