@@ -114,6 +114,23 @@ matrixReal& matrixReal::operator/=(const double& a)
   return *this;
 }
 
+double matrixReal::dot_product(const matrixReal& o) const {
+  assert(size() == o.size());
+  return ddot_(o.size(), data(), 1, o.data(), 1);
+}
+
+double matrixReal::norm() const {
+  return std::sqrt(dot_product(*this));
+}
+
+double matrixReal::rms() const {
+  return std::sqrt(dot_product(*this)/static_cast<double>(size()));
+}
+
+double matrixReal::variance() const {
+  return dot_product(*this)/static_cast<double>(size());
+}
+
 void matrixReal::diagonalize(double* eigVals)
 {
   assert (nrows == ncols);

@@ -70,30 +70,28 @@ int main(int argc, char const *argv[])
   for (int ii = 0; ii < Vecs.nc(); ii++)
     cout << Vecs.dot(ii,ii) << endl;
 
-  vectorMatrix R(100,100);
-  R.makeIdentity();
-  R(3,4) = R(4,3) = -2.0;
-  R(0,4) = R(4,0) = 3.0;
-  cout << R;
-  cout << *R.getSub(1,1,4,4);
-  R.printMem();
-  vector <double> vals(8,0.0);
-  R.diagonalize(vals.data());
-  cout << "Diagonalized Matrix: " << endl << R << endl;
-  cout << "Eigenvalues :" << endl << *vals.data() << endl;
-
-  R.makeIdentity();
-  R(3,4) = R(4,3) = -2.0;
-  R(0,4) = R(4,0) = 3.0;
-  cout << R;
+  vectorMatrix R(1000,1000);
+  R.random();
+  R += *R.transpose();
+  for (int i = 0; i < 1000; ++i)
+    R(i,i) += i*i*1.;
 
   auto RVecs = make_shared<vectorMatrix>(R);
+
+  vector <double> vals(1000, 0.0);
+  R.diagonalize(vals.data());
+
   vector<double> RVals;
-  vector<double> RDiags(R.nr(),0.0);
-  for (int rr = 0; rr < R.nr(); rr++) RDiags[rr] = R(rr,rr);
-  genMatrix GenR(R.nr(),R.nc(),[&R](vectorMatrix &o){return R*o;},RDiags);
-  Davidson RDave(GenR, 2, 2, 100, 1.0e-6);
+  vector<double> RDiags(RVecs->nr(),0.0);
+  for (int rr = 0; rr < RVecs->nr(); rr++) RDiags[rr] = RVecs->element(rr,rr);
+  genMatrix GenR(RVecs->nr(),RVecs->nc(),[&RVecs](vectorMatrix &o){return *RVecs*o;},RDiags);
+  Davidson RDave(GenR, 2, 2, 100, 1.0e-4);
   tie(RVecs,RVals) = RDave.diagonalize();
+  cout << "full eig:     " << setw(22) << setprecision(16) << vals[0] << endl;
+  cout << "davidson eig: " << setw(22) << setprecision(16) << RVals[0] << endl;
+  cout << endl;
+  cout << "full eig:     " << setw(22) << setprecision(16) << vals[1] << endl;
+  cout << "davidson eig: " << setw(22) << setprecision(16) << RVals[1] << endl;
 #endif
 
 //DMRG test code

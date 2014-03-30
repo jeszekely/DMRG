@@ -160,6 +160,11 @@ public:
   matrixReal& operator*=(const double&);
   matrixReal& operator/=(const double&);
 
+  double dot_product(const matrixReal& o) const;
+  double norm() const;
+  double rms() const;
+  double variance() const;
+
 //Vector-Vector Operations
   double operator%(const matrixReal& o) const;
 

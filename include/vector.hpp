@@ -33,6 +33,8 @@ public:
   void orthonorm(int n);
   void orthonormAll();
 
+  std::shared_ptr<vectorMatrix> canonical_orthogonalization(const double thresh = 1.0e-8) const;
+
   matrixReal vec(const int vecN);
   void diagonalizeSub(double* eigVals,int nr, int nc);
 
