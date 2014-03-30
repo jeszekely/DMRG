@@ -60,15 +60,15 @@ int main(int argc, char const *argv[])
 
 //test code for the davidson diagonalization
 #if 1
-  vectorMatrix Vecs(10,10);
-  Vecs.random();
-  cout << Vecs;
-  for (int ii = 0; ii < Vecs.nc(); ii++)
-    cout << Vecs.dot(ii,ii) << endl;
-  Vecs.orthonormAll();
-  cout << Vecs;
-  for (int ii = 0; ii < Vecs.nc(); ii++)
-    cout << Vecs.dot(ii,ii) << endl;
+  // vectorMatrix Vecs(10,10);
+  // Vecs.random();
+  // cout << Vecs;
+  // for (int ii = 0; ii < Vecs.nc(); ii++)
+  //   cout << Vecs.dot(ii,ii) << endl;
+  // Vecs.orthonormAll();
+  // cout << Vecs;
+  // for (int ii = 0; ii < Vecs.nc(); ii++)
+  //   cout << Vecs.dot(ii,ii) << endl;
 
   vectorMatrix R(100,100);
   R.makeIdentity();
@@ -78,22 +78,22 @@ int main(int argc, char const *argv[])
   cout << *R.getSub(1,1,4,4);
   R.printMem();
   vector <double> vals(8,0.0);
-  R.diagonalize(vals.data());
+  //R.diagonalize(vals.data());
   cout << "Diagonalized Matrix: " << endl << R << endl;
-  cout << "Eigenvalues :" << endl << *vals.data() << endl;
+  cout << "Eigenvalues :" << endl << vals[0] << endl;
 
   R.makeIdentity();
   R(3,4) = R(4,3) = -2.0;
   R(0,4) = R(4,0) = 3.0;
-  cout << R;
 
-  auto RVecs = make_shared<vectorMatrix>(R);
+  shared_ptr<vectorMatrix> RVecs;
   vector<double> RVals;
   vector<double> RDiags(R.nr(),0.0);
   for (int rr = 0; rr < R.nr(); rr++) RDiags[rr] = R(rr,rr);
   genMatrix GenR(R.nr(),R.nc(),[&R](vectorMatrix &o){return R*o;},RDiags);
-  Davidson RDave(GenR, 2, 2, 100, 1.0e-6);
+  Davidson RDave(GenR, 4, 2, 1000, 1.0e-6);
   tie(RVecs,RVals) = RDave.diagonalize();
+
 #endif
 
 //DMRG test code
