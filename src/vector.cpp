@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <assert.h>
 #include <random>
+#include <stdexcept>
 
 #include "vector.hpp"
 #include "matrix.hpp"
@@ -16,12 +17,6 @@ vectorMatrix::vectorMatrix(const vectorMatrix& o) : matrixReal(o){}
 vectorMatrix::vectorMatrix(vectorMatrix&& o) : matrixReal(move(o)){}
 vectorMatrix::vectorMatrix(const matrixReal& o) : matrixReal(o){}
 vectorMatrix::vectorMatrix(matrixReal&& o) : matrixReal(move(o)){}
-
-//  Apply a scaling factor to one vector
-void vectorMatrix::scaleVec(const int n, const double factor)
-{
-   std::for_each(&element(0,n), &element(0,n)+nrows, [&factor](double & p){p*=factor;});
-}
 
 void vectorMatrix::normalize(const int n, const double factor)
 {

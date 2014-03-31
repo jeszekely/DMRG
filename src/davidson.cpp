@@ -28,16 +28,16 @@ tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
   //eigenvector and eigenvalue return arrays
   auto eigVecs = make_shared<vectorMatrix>(n,numVecs);
   vector<double> eigVals(numVecs, 0.0);
-#if 1
+
   //initial guess set to unit vectors
   auto trials = make_shared<vectorMatrix>(n, initialVecs);
   trials->makeIdentity();
 
   for (int iter = 0; iter < maxIterations; ++iter) {
+
+    //Apply matrix to guess and make subspace matrix, diagonalize
     vectorMatrix Ht(H * *trials);
-
     vectorMatrix Hsub( *trials | Ht );
-
     const int subsize = Hsub.nc();
     vector<double> eigs(subsize, 0.0);
     Hsub.diagonalize(eigs.data());
@@ -88,41 +88,5 @@ tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
 
     trials = new_trials->canonical_orthogonalization();
   }
-#else
-  vectorMatrix t(n, initialVecs);
-  vectorMatrix V(n,n);
-
-  vector<double> theta_old(eigVals);
-  const int mmax = n/2;
-
-  vectorMatrix Ht = H*t; //matrix acting on test vectors
-
-  for (int m = initialVecs; m < mmax; m+=initialVecs)
-  {
-    if (m <= initialVecs)
-    {
-      V.setSub(0,0,t);
-    }
-    else if (m > initialVecs) copy_n(eigVals.data(),numVecs,theta_old.data());
-    vectorMatrix T = (t|Ht);
-    vector<double> TeigVals(T.nc(),0.0);
-    T.diagonalize(TeigVals.data());
-    for (int jj = 0; jj<initialVecs; jj++)
-    {
-      vectorMatrix r = Ht*T - *V.getSub(0,0,V.nr(),m+1)*T*TeigVals[jj];
-      eigVecs->setSub(0,jj,*V.getSub(0,0,V.nr(),m+1)*T);
-      vectorMatrix q(r);
-      for (int kk = 0; kk < q.nr(); kk++)
-        q(kk,0) = (1.0/(TeigVals[jj] - H.diagElem(kk)))*q(kk,0);
-      V.setSub(0,m+1+jj,q);
-    }
-    double norm = 0.0;
-    for (int jj = 0; jj < numVecs; jj++)
-      norm += abs(pow(theta_old[jj] - eigVals[jj],2));
-    norm = sqrt(norm);
-    if (norm < tolerance) break;
-  }
-#endif
-
   return make_tuple(eigVecs,eigVals);
 }

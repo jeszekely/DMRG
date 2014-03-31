@@ -5,7 +5,7 @@
 CC = g++
 
 #MKLROOT = /opt/intel/composer_xe_2013_sp1/mkl
-#CC = /usr/local/Cellar/gcc49/4.9-20140119/bin/g++-4.9
+CC = /opt/local/bin/g++-mp-4.8
 
 CFLAGS = -O3 -I$(MKLROOT)/include -Wall -Wno-sign-compare -Wno-unused-function -Werror -std=c++11 -openmp
 

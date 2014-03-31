@@ -202,7 +202,7 @@ tuple<shared_ptr<matrixReal>, shared_ptr<matrixReal>> matrixReal::svd(vector<dou
   dgesvd_("A","A", nrows, ncols, data(), nrows, s.data(), u->data(), nrows, vT->data(), ncols, s.data(), lwork, info);
   lwork = s[0];
   if (lwork <= 0)
-      throw runtime_error("dgesvd faied allocating lwork value");
+      throw runtime_error("dgesvd failed allocating lwork value");
   unique_ptr<double[]> work(new double[lwork]);
   dgesvd_("A","A", nrows, ncols, data(), nrows, s.data(), u->data(), nrows, vT->data(), ncols, work.get(), lwork, info);
   if (info != 0)

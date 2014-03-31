@@ -2,6 +2,7 @@
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include <ctime>
 
 #include "matrix.hpp"
 #include "block.hpp"
@@ -79,19 +80,31 @@ int main(int argc, char const *argv[])
   auto RVecs = make_shared<vectorMatrix>(R);
 
   vector <double> vals(1000, 0.0);
+
+  clock_t t1, t2;
+  double FullDiagTime, DavidsonTime;
+  t1 = clock();
   R.diagonalize(vals.data());
+  t2 = clock();
+  FullDiagTime = (float(t2)-float(t1))/CLOCKS_PER_SEC;
 
   vector<double> RVals;
   vector<double> RDiags(RVecs->nr(),0.0);
   for (int rr = 0; rr < RVecs->nr(); rr++) RDiags[rr] = RVecs->element(rr,rr);
   genMatrix GenR(RVecs->nr(),RVecs->nc(),[&RVecs](vectorMatrix &o){return *RVecs*o;},RDiags);
   Davidson RDave(GenR, 2, 2, 100, 1.0e-4);
+  t1 = clock();
   tie(RVecs,RVals) = RDave.diagonalize();
+  t2 = clock();
+  DavidsonTime = (float(t2)-float(t1))/CLOCKS_PER_SEC;
+
   cout << "full eig:     " << setw(22) << setprecision(16) << vals[0] << endl;
   cout << "davidson eig: " << setw(22) << setprecision(16) << RVals[0] << endl;
   cout << endl;
   cout << "full eig:     " << setw(22) << setprecision(16) << vals[1] << endl;
   cout << "davidson eig: " << setw(22) << setprecision(16) << RVals[1] << endl;
+  cout << "Code execution time:" << endl;
+  cout << "full diag: " << FullDiagTime << " s" << endl << "davidson: " << DavidsonTime << " s" << endl;
 #endif
 
 //DMRG test code

@@ -24,7 +24,11 @@ public:
   double dot(const int ii, const int jj) const;
   double dot(const vectorMatrix& o, const int ii, const int jj) const;
 
-  void scaleVec(const int n, const double factor);
+//  Apply a scaling factor to one vector
+  void scaleVec(const int n, const double factor)
+  {
+    std::for_each(&element(0,n), &element(0,n)+nrows, [&factor](double & p){p*=factor;});
+  }
 
   void normalize(const int n, const double scale);
   void normalize(const int n);
