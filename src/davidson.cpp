@@ -52,7 +52,7 @@ tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
 
     vector<double>S_eigs(S->nc(), 0.0);
     S->diagonalize(S_eigs.data());
-    auto tmp = make_shared<vectorMatrix>(S->nc(), S->nr());
+    auto tmp = make_shared<vectorMatrix>(S->nc(), count_if(S_eigs.begin(), S_eigs.end(), [] (const double t) { return (t>1.0e-8); }));
     for (int i = 0, current = 0; i < S->nc(); ++i)
       if (S_eigs[i] > 1.0e-8) daxpy_(S->nr(), 1.0/std::sqrt(S_eigs[i]), &S->element(0,i), 1, &tmp->element(0,current++),1);
     vectorMatrix Hprime(*tmp | *tHt * *tmp);
