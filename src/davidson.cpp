@@ -34,11 +34,20 @@ tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
   auto trials = make_shared<vectorMatrix>(n, initialVecs);
   trials->makeIdentity();
 
+  //Stored ma
+  auto HtStored = make_shared<vectorMatrix>(H**trials);
+  int nNewVecs = 0;
+
   for (int iter = 0; iter < maxIterations; ++iter) {
 
     //Apply matrix to guess and make subspace matrix, diagonalize
-    vectorMatrix Ht(H * *trials);
-    auto tHt = make_shared<vectorMatrix>(*trials | Ht);// vectorMatrix tHt(*trials | Ht);
+    auto Ht = make_shared<vectorMatrix>(n,HtStored->nc() + nNewVecs);
+    Ht->setSub(0,0,*HtStored);
+    auto subtrials = make_shared<vectorMatrix>(*trials->getSub(0,HtStored->nc(),n,nNewVecs));
+    if (nNewVecs != 0) Ht->setSub(0, HtStored->nc(), H**subtrials);
+    HtStored = Ht;
+
+    auto tHt = make_shared<vectorMatrix>(*trials | *Ht);
     auto S = make_shared<vectorMatrix>(*trials | *trials);
 
     vector<double>S_eigs(S->nc(), 0.0);
@@ -54,7 +63,7 @@ tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
     vectorMatrix Hsub (*tmp*Hprime);
 
     vectorMatrix psi( *trials*Hsub );    // current best guesses for eigenvectors
-    vectorMatrix sigma( Ht*Hsub ); // transformed sigma vectors
+    vectorMatrix sigma( *Ht*Hsub ); // transformed sigma vectors
 
     copy_n(psi.data(), n*numVecs, eigVecs->data());
     copy_n(eigs.data(), numVecs, eigVals.data());
@@ -98,6 +107,7 @@ tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
       copy_n(new_trial_vectors[ii]->data(), new_trial_vectors[ii]->nr(), &new_trials->element(0, trials->nc() + ii));
 
     trials = new_trials;
+    nNewVecs = new_trial_vectors.size();
   }
   return make_tuple(eigVecs,eigVals);
 }
