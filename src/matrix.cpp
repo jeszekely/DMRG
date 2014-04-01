@@ -114,6 +114,23 @@ matrixReal& matrixReal::operator/=(const double& a)
   return *this;
 }
 
+double matrixReal::dot_product(const matrixReal& o) const {
+  assert(size() == o.size());
+  return ddot_(o.size(), data(), 1, o.data(), 1);
+}
+
+double matrixReal::norm() const {
+  return std::sqrt(dot_product(*this));
+}
+
+double matrixReal::rms() const {
+  return std::sqrt(dot_product(*this)/static_cast<double>(size()));
+}
+
+double matrixReal::variance() const {
+  return dot_product(*this)/static_cast<double>(size());
+}
+
 void matrixReal::diagonalize(double* eigVals)
 {
   assert (nrows == ncols);
@@ -185,7 +202,7 @@ tuple<shared_ptr<matrixReal>, shared_ptr<matrixReal>> matrixReal::svd(vector<dou
   dgesvd_("A","A", nrows, ncols, data(), nrows, s.data(), u->data(), nrows, vT->data(), ncols, s.data(), lwork, info);
   lwork = s[0];
   if (lwork <= 0)
-      throw runtime_error("dgesvd faied allocating lwork value");
+      throw runtime_error("dgesvd failed allocating lwork value");
   unique_ptr<double[]> work(new double[lwork]);
   dgesvd_("A","A", nrows, ncols, data(), nrows, s.data(), u->data(), nrows, vT->data(), ncols, work.get(), lwork, info);
   if (info != 0)

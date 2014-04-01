@@ -1,0 +1,28 @@
+{
+	"DavidsonParams" :
+	{
+		"Verbose" : true
+	},
+	"TestCode" :
+	{
+		"BasicMatrix" :
+		{
+			"Run" : false
+		},
+		"Davidson" :
+		{
+			"Run" : true,
+			"MatrixSize" : 1000,
+			"nVecs" : 2,
+			"tolerance" : 1.0e-6
+		},
+		"DMRGSpin" :
+		{
+			"Run" : false,
+			"ChainLen" : 20,
+			"TestTrunc1" : 10,
+			"TestTrunc2" : 20,
+			"TestTrunc3" : 30
+		}
+	}
+}

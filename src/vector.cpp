@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <assert.h>
 #include <random>
+#include <stdexcept>
 
 #include "vector.hpp"
 #include "matrix.hpp"
@@ -16,12 +17,6 @@ vectorMatrix::vectorMatrix(const vectorMatrix& o) : matrixReal(o){}
 vectorMatrix::vectorMatrix(vectorMatrix&& o) : matrixReal(move(o)){}
 vectorMatrix::vectorMatrix(const matrixReal& o) : matrixReal(o){}
 vectorMatrix::vectorMatrix(matrixReal&& o) : matrixReal(move(o)){}
-
-//  Apply a scaling factor to one vector
-void vectorMatrix::scaleVec(const int n, const double factor)
-{
-   std::for_each(&element(0,n), &element(0,n)+nrows, [&factor](double & p){p*=factor;});
-}
 
 void vectorMatrix::normalize(const int n, const double factor)
 {
@@ -66,6 +61,22 @@ void vectorMatrix::orthonormAll()
    }
    normalizeAll();
  }
+
+shared_ptr<vectorMatrix> vectorMatrix::canonical_orthogonalization(const double thresh) const {
+  matrixReal S(*this | *this);
+  vector<double> S_eigs(nc(), 0.0);
+  S.diagonalize(S_eigs.data());
+
+  const int out_dim = count_if(S_eigs.begin(), S_eigs.end(), [&thresh] (const double v) { return (v > thresh); });
+  auto tmp = make_shared<vectorMatrix>(S.nr(), out_dim);
+  for (int i = 0, current = 0; i < nc(); ++i) {
+    if (S_eigs[i] > thresh) {
+      daxpy_(S.nr(), 1.0/std::sqrt(S_eigs[i]), &S(0,i), 1, &tmp->element(0,current++), 1);
+    }
+  }
+
+  return make_shared<vectorMatrix>(*this * *tmp);
+}
 
 //vector dot product where vectors are two columns in matrix
 double vectorMatrix::dot(const int ii, const int jj) const

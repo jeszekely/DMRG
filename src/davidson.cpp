@@ -6,7 +6,7 @@
 
 #include "matrix.hpp"
 #include "davidson.hpp"
-#include "vector.hpp"
+#include "input_parser.hpp"
 
 using namespace std;
 
@@ -24,50 +24,97 @@ Davidson::Davidson(genMatrix h, int iVecs, int nVecs, int maxIts, double err) : 
 
 tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
 {
-  int n = H.nr(); //Size of a vector
-  int mmax = n/2; //Maximum iterations
+  const int n = H.nr(); //Size of a vector
 
-  //initial guess set to unit vectors
-  vectorMatrix t(n,initialVecs);
-  //t.makeIdentity();
-  t.random();
-  t.orthonormAll();
-
-  //Array to hold guess vectors
-  vectorMatrix V(n,n);
   //eigenvector and eigenvalue return arrays
   auto eigVecs = make_shared<vectorMatrix>(n,numVecs);
-  vector<double> eigVals(numVecs,1.0);
-  vector<double> theta_old(numVecs,100.0);
-  vectorMatrix Ht(n,mmax);
-  Ht.setSub(0,0,H*t); //matrix acting on test vectors
+  vector<double> eigVals(numVecs, 0.0);
 
-  for (int m = initialVecs; m < mmax; m+=initialVecs)
-  {
-    cout << "Step #" << m << endl;
-    if (m <= initialVecs) {V.setSub(0,0,t);}
-    else copy_n(eigVals.data(),numVecs,theta_old.data());
+  //initial guess set to unit vectors
+  auto trials = make_shared<vectorMatrix>(n, initialVecs);
+  trials->makeIdentity();
 
-    vectorMatrix HtTemp = vectorMatrix(*V.getSub(0,0,V.nr(),m));
-    Ht.setSub(0,0,H*HtTemp);
-    vectorMatrix T = (*V.getSub(0,0,V.nr(),m)|HtTemp);
-    T.diagonalize(eigVals.data());
-    for (int jj = 0; jj<initialVecs; jj++)
-    {
-      vectorMatrix r = HtTemp*(*T.getSub(0,jj,T.nr(),1)) - *V.getSub(0,0,V.nr(),T.nr())*(*T.getSub(0,jj,T.nr(),1))*eigVals[jj];
-      auto mat = make_shared<vectorMatrix>(*V.getSub(0,0,V.nr(),T.nr())*(*T.getSub(0,jj,T.nr(),1)));
-      if (jj < numVecs) eigVecs->setSub(0,jj,*mat);
-      vectorMatrix q(r);
-      for (int kk = 0; kk < q.nr(); kk++)
-        q(kk,0) = (1.0/(eigVals[jj] - H.diagElem(kk)))*q(kk,0);
-      V.setSub(0,m+jj,q);
+  //Stored ma
+  auto HtStored = make_shared<vectorMatrix>(H**trials);
+  int nNewVecs = 0;
+
+  for (int iter = 0; iter < maxIterations; ++iter) {
+
+    //Apply matrix to guess and make subspace matrix, diagonalize
+    auto Ht = make_shared<vectorMatrix>(n,HtStored->nc() + nNewVecs);
+    Ht->setSub(0,0,*HtStored);
+    auto subtrials = make_shared<vectorMatrix>(*trials->getSub(0,HtStored->nc(),n,nNewVecs));
+    if (nNewVecs != 0) Ht->setSub(0, HtStored->nc(), H**subtrials);
+    HtStored = Ht;
+
+    auto tHt = make_shared<vectorMatrix>(*trials | *Ht);
+    auto S = make_shared<vectorMatrix>(*trials | *trials);
+
+    vector<double>S_eigs(S->nc(), 0.0);
+    S->diagonalize(S_eigs.data());
+    auto tmp = make_shared<vectorMatrix>(S->nc(), S->nr());
+    for (int i = 0, current = 0; i < S->nc(); ++i)
+      if (S_eigs[i] > 1.0e-8) daxpy_(S->nr(), 1.0/std::sqrt(S_eigs[i]), &S->element(0,i), 1, &tmp->element(0,current++),1);
+    vectorMatrix Hprime(*tmp | *tHt * *tmp);
+
+    const int subsize = Hprime.nc();
+    vector<double> eigs(subsize, 0.0);
+    Hprime.diagonalize(eigs.data());
+    vectorMatrix Hsub (*tmp*Hprime);
+
+    vectorMatrix psi( *trials*Hsub );    // current best guesses for eigenvectors
+    vectorMatrix sigma( *Ht*Hsub ); // transformed sigma vectors
+
+    copy_n(psi.data(), n*numVecs, eigVecs->data());
+    copy_n(eigs.data(), numVecs, eigVals.data());
+
+    vector<shared_ptr<matrixReal>> new_trial_vectors;
+
+    for (int ii = 0; ii < numVecs; ++ii) {
+      //matrixReal residual(n, 1);
+      //daxpy_(n, -eigs[ii], &psi(0,ii), 1, &residual(0,0), 1);
+      //daxpy_(n, 1.0, &sigma(0,ii), 1, &residual(0,0), 1);
+      matrixReal residual( (psi.vec(ii)*eigs[ii]) - sigma.vec(ii) );
+      if (verbose) cout << residual;
+
+      const double residual_norm = residual.variance();
+
+      if (verbose) cout << setw(6) << iter << setw(6) << ii
+                              << fixed << setw(22) << setprecision(12) << eigs[ii]
+                              << scientific << setw(16) << setprecision(8) << residual_norm << endl;
+
+      if ( residual_norm > tolerance) {
+        auto trial_vector = make_shared<matrixReal>(n, 1);
+
+        // form new guess
+        const double en = eigs[ii];
+        for (int kk = 0; kk < n; ++kk)
+          trial_vector->element(kk, 0) = residual(kk,0) / min(en - H.diagElem(kk), -0.1);
+
+        new_trial_vectors.push_back(trial_vector);
+      }
     }
-    V.orthonormAll();
-    double norm = 0.0;
-    for (int jj = 0; jj < numVecs; jj++){
-      norm += abs(pow(theta_old[jj] - eigVals[jj],2));}
-    norm = sqrt(norm);
-    if (norm < tolerance) break;
+    if (numVecs != 0 && verbose) cout << endl;
+
+    if (new_trial_vectors.empty()) {
+      if (verbose) cout << "Converged!" << endl;
+      break;
+    }
+
+    auto new_trials = make_shared<vectorMatrix>(n, trials->nc() + new_trial_vectors.size());
+    copy_n(trials->data(), trials->size(), new_trials->data());
+    for (int ii = 0; ii < new_trial_vectors.size(); ++ii)
+      copy_n(new_trial_vectors[ii]->data(), new_trial_vectors[ii]->nr(), &new_trials->element(0, trials->nc() + ii));
+
+    trials = new_trials;
+    nNewVecs = new_trial_vectors.size();
   }
   return make_tuple(eigVecs,eigVals);
 }
+
+void Davidson::init(programInputs &P)
+{
+  verbose = P.DP_Verbose;
+  return;
+}
+

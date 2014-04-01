@@ -2,24 +2,25 @@
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include <ctime>
 
 #include "matrix.hpp"
 #include "block.hpp"
 #include "dmrg.hpp"
 #include "vector.hpp"
 #include "davidson.hpp"
-// #include <boost/algorithm/string.hpp>
-// #include <boost/property_tree/ptree.hpp>
-// #include <boost/property_tree/json_parser.hpp>
-// #include <boost/lexical_cast.hpp>
+
+#include "input_parser.hpp"
 
 using namespace std;
 
 int main(int argc, char const *argv[])
 {
+  programInputs Args("inputs.json");
 
 //Test code for the matrix class
-#if 0
+if (Args.TC_BasicMatrix_Run)
+{
   matrixReal M(5,6);
   M.makeIdentity();
   M(2,1) = 10.0;
@@ -56,53 +57,61 @@ int main(int argc, char const *argv[])
   cout << *T << *U;
   T->setSub(1,0,*O.transpose());
   cout << *T;
-#endif
+}
 
 //test code for the davidson diagonalization
-#if 1
-  // vectorMatrix Vecs(10,10);
-  // Vecs.random();
-  // cout << Vecs;
-  // for (int ii = 0; ii < Vecs.nc(); ii++)
-  //   cout << Vecs.dot(ii,ii) << endl;
-  // Vecs.orthonormAll();
-  // cout << Vecs;
-  // for (int ii = 0; ii < Vecs.nc(); ii++)
-  //   cout << Vecs.dot(ii,ii) << endl;
+if (Args.TC_Davidson_Run)
+{
+  vectorMatrix Vecs(10,10);
+  Vecs.random();
+  cout << Vecs;
+  for (int ii = 0; ii < Vecs.nc(); ii++)
+    cout << Vecs.dot(ii,ii) << endl;
+  Vecs.orthonormAll();
+  cout << Vecs;
+  for (int ii = 0; ii < Vecs.nc(); ii++)
+    cout << Vecs.dot(ii,ii) << endl;
 
-  vectorMatrix R(100,100);
-  R.makeIdentity();
-  R(3,4) = R(4,3) = -2.0;
-  R(0,4) = R(4,0) = 3.0;
-  cout << R;
-  cout << *R.getSub(1,1,4,4);
-  R.printMem();
-  vector <double> vals(8,0.0);
-  //R.diagonalize(vals.data());
-  cout << "Diagonalized Matrix: " << endl << R << endl;
-  cout << "Eigenvalues :" << endl << vals[0] << endl;
+  vectorMatrix R(Args.TC_Davidson_MatrixSize,Args.TC_Davidson_MatrixSize);
+  R.random();
+  R += *R.transpose();
+  for (int i = 0; i < Args.TC_Davidson_MatrixSize; ++i)
+    R(i,i) += i*i*1.;
 
-  R.makeIdentity();
-  R(3,4) = R(4,3) = -2.0;
-  R(0,4) = R(4,0) = 3.0;
+  auto RVecs = make_shared<vectorMatrix>(R);
 
-  shared_ptr<vectorMatrix> RVecs;
+  vector <double> vals(Args.TC_Davidson_MatrixSize, 0.0);
+
+  clock_t t1, t2;
+  double FullDiagTime, DavidsonTime;
+  t1 = clock();
+  R.diagonalize(vals.data());
+  t2 = clock();
+  FullDiagTime = (float(t2)-float(t1))/CLOCKS_PER_SEC;
+
   vector<double> RVals;
-  vector<double> RDiags(R.nr(),0.0);
-  for (int rr = 0; rr < R.nr(); rr++) RDiags[rr] = R(rr,rr);
-  genMatrix GenR(R.nr(),R.nc(),[&R](vectorMatrix &o){return R*o;},RDiags);
-  Davidson RDave(GenR, 4, 2, 1000, 1.0e-6);
-  tie(RVecs,RVals) = RDave.diagonalize();
+  t1 = clock();
+  tie(RVecs,RVals) = diagonalizeDavidson(*RVecs,Args.TC_Davidson_nVecs, Args.TC_Davidson_nVecs, 100, Args.TC_Davidson_tolerance, Args); //RDave.diagonalize();
+  t2 = clock();
+  DavidsonTime = (float(t2)-float(t1))/CLOCKS_PER_SEC;
 
-#endif
+  cout << "full eig:     " << setw(22) << setprecision(16) << vals[0] << endl;
+  cout << "davidson eig: " << setw(22) << setprecision(16) << RVals[0] << endl;
+  cout << endl;
+  cout << "full eig:     " << setw(22) << setprecision(16) << vals[1] << endl;
+  cout << "davidson eig: " << setw(22) << setprecision(16) << RVals[1] << endl;
+  cout << "Code execution time:" << endl;
+  cout << "full diag: " << FullDiagTime << " s" << endl << "davidson: " << DavidsonTime << " s" << endl;
+}
 
 //DMRG test code
-#if 0
-  int maxChainLen=20; //This means the entire thing is 20, so 10 on each side
-  vector<int> maxKeepNum = {10, 20, 30};
+if (Args.TC_DMRGSpin_Run)
+{
+  int maxChainLen=Args.TC_DMRGSpin_ChainLen; //This means the entire thing is 20, so 10 on each side
+  vector<int> maxKeepNum = {Args.TC_DMRGSpin_TestTrunc1, Args.TC_DMRGSpin_TestTrunc2, Args.TC_DMRGSpin_TestTrunc3};
   finiteSystem finiteChain(maxChainLen, maxKeepNum);
   finiteChain.sweep();
-#endif
+}
 
   return 0;
 }
