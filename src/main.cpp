@@ -90,13 +90,13 @@ if (Args.TC_Davidson_Run)
   FullDiagTime = (float(t2)-float(t1))/CLOCKS_PER_SEC;
 
   vector<double> RVals;
-  vector<double> RDiags(RVecs->nr(),0.0);
-  for (int rr = 0; rr < RVecs->nr(); rr++) RDiags[rr] = RVecs->element(rr,rr);
-  genMatrix GenR(RVecs->nr(),RVecs->nc(),[&RVecs](vectorMatrix &o){return *RVecs*o;},RDiags);
-  Davidson RDave(GenR, Args.TC_Davidson_nVecs, Args.TC_Davidson_nVecs, 100, Args.TC_Davidson_tolerance);
-  RDave.init(Args);
+  //vector<double> RDiags(RVecs->nr(),0.0);
+  //for (int rr = 0; rr < RVecs->nr(); rr++) RDiags[rr] = RVecs->element(rr,rr);
+  //genMatrix GenR(RVecs->nr(),RVecs->nc(),[&RVecs](vectorMatrix &o){return *RVecs*o;},RDiags);
+  //Davidson RDave(GenR, Args.TC_Davidson_nVecs, Args.TC_Davidson_nVecs, 100, Args.TC_Davidson_tolerance);
+  //RDave.init(Args);
   t1 = clock();
-  tie(RVecs,RVals) = RDave.diagonalize();
+  tie(RVecs,RVals) = diagonalizeDavidson(*RVecs,Args.TC_Davidson_nVecs, Args.TC_Davidson_nVecs, 100, Args.TC_Davidson_tolerance); //RDave.diagonalize();
   t2 = clock();
   DavidsonTime = (float(t2)-float(t1))/CLOCKS_PER_SEC;
 
