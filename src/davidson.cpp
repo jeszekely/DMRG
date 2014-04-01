@@ -6,6 +6,7 @@
 
 #include "matrix.hpp"
 #include "davidson.hpp"
+#include "input_parser.hpp"
 
 using namespace std;
 
@@ -65,11 +66,11 @@ tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
       //daxpy_(n, -eigs[ii], &psi(0,ii), 1, &residual(0,0), 1);
       //daxpy_(n, 1.0, &sigma(0,ii), 1, &residual(0,0), 1);
       matrixReal residual( (psi.vec(ii)*eigs[ii]) - sigma.vec(ii) );
-      cout << residual;
+      if (verbose) cout << residual;
 
       const double residual_norm = residual.variance();
 
-      cout << setw(6) << iter << setw(6) << ii
+      if (verbose) cout << setw(6) << iter << setw(6) << ii
                               << fixed << setw(22) << setprecision(12) << eigs[ii]
                               << scientific << setw(16) << setprecision(8) << residual_norm << endl;
 
@@ -84,10 +85,10 @@ tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
         new_trial_vectors.push_back(trial_vector);
       }
     }
-    if (numVecs != 0) cout << endl;
+    if (numVecs != 0 && verbose) cout << endl;
 
     if (new_trial_vectors.empty()) {
-      cout << "Converged!" << endl;
+      if (verbose) cout << "Converged!" << endl;
       break;
     }
 
@@ -100,3 +101,10 @@ tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
   }
   return make_tuple(eigVecs,eigVals);
 }
+
+void Davidson::init(programInputs &P)
+{
+  verbose = P.DP_Verbose;
+  return;
+}
+

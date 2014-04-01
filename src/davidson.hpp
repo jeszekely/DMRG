@@ -2,6 +2,7 @@
 #define DMRG_DAVIDSON
 #include "matrix.hpp"
 #include "vector.hpp"
+#include "input_parser.hpp"
 
 //generalized matrix class designed to be used as input to the davidson algorithm
 //contains the number of rows and cols in a matrix, along with a multiplication procedure
@@ -29,9 +30,11 @@ protected:
   int numVecs;
   int maxIterations;
   double tolerance;
+  bool verbose = false;
 public:
   Davidson(genMatrix H, int initialVecs, int numVecs, int maxIterations, double error);
   std::tuple<std::shared_ptr<vectorMatrix>,std::vector<double>> diagonalize();
+  void init(programInputs &P);
 };
 
 #endif
