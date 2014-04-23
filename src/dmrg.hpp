@@ -19,7 +19,7 @@ public:
 
 	void enlarge(block& b);
 
-	//Returns the ground state energy and wavefunction 
+	//Returns the ground state energy and wavefunction
 	std::tuple<double, std::shared_ptr<matrixReal>> buildSuperblock(block& sysBlock, block& envBlock);
 
 	//Returns the truncation error and the diagonalized reduced density matrix

@@ -96,7 +96,8 @@ tuple<std::shared_ptr<vectorMatrix>,vector<double>> Davidson::diagonalize()
     }
     if (numVecs != 0 && verbose) cout << endl;
 
-    if (new_trial_vectors.empty()) {
+    if (new_trial_vectors.empty())
+    {
       if (verbose) cout << "Converged!" << endl;
       break;
     }

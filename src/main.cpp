@@ -91,7 +91,7 @@ if (Args.TC_Davidson_Run)
 
   vector<double> RVals;
   t1 = clock();
-  tie(RVecs,RVals) = diagonalizeDavidson(*RVecs,Args.TC_Davidson_nVecs, Args.TC_Davidson_nVecs, 100, Args.TC_Davidson_tolerance, Args); //RDave.diagonalize();
+  tie(RVecs,RVals) = diagonalizeDavidson(*RVecs,Args.TC_Davidson_nVecs, Args.TC_Davidson_nVecs, 100, Args.TC_Davidson_tolerance, &Args); //RDave.diagonalize();
   t2 = clock();
   DavidsonTime = (float(t2)-float(t1))/CLOCKS_PER_SEC;
 

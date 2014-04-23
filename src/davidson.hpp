@@ -42,7 +42,7 @@ public:
 //  access to each element
 //  multiplication operator
 template <typename T>
-std::tuple<std::shared_ptr<vectorMatrix>,std::vector<double>> diagonalizeDavidson(T &o, int iGuess, int nV, int max, double tol, programInputs &A)
+std::tuple<std::shared_ptr<vectorMatrix>,std::vector<double>> diagonalizeDavidson(T &o, int iGuess, int nV, int max, double tol, programInputs *A = NULL)
 {
   assert(o.nr() == o.nc());
   std::vector<double> eigVals;
@@ -51,7 +51,7 @@ std::tuple<std::shared_ptr<vectorMatrix>,std::vector<double>> diagonalizeDavidso
     oDiags[ii] = o(ii,ii);
   genMatrix oGen(o.nr(),o.nc(),[&o](vectorMatrix &vec){return o*vec;},oDiags);
   Davidson oDave(oGen, iGuess, nV, max, tol);
-  oDave.init(A);
+  if (A) oDave.init(*A);
   return oDave.diagonalize();
 }
 
