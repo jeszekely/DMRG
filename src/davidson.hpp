@@ -1,3 +1,8 @@
+/**
+ * \file "davidson.hpp"
+ * \author  J. Szekely
+ */
+
 #ifndef DMRG_DAVIDSON
 #define DMRG_DAVIDSON
 #include "matrix.hpp"
@@ -6,6 +11,11 @@
 
 //generalized matrix class designed to be used as input to the davidson algorithm
 //contains the number of rows and cols in a matrix, along with a multiplication procedure
+
+/**
+ * @brief This is a matrix class
+ *
+ */
 class genMatrix
 {
 protected:
@@ -16,6 +26,13 @@ protected:
 
 public:
   vectorMatrix operator*(vectorMatrix&);
+
+  /**
+   * @brief general matrix class
+   *
+   * @param nr number rows
+   * @param nc number columns
+   */
   genMatrix(size_t nr, size_t nc, std::function<vectorMatrix(vectorMatrix&)> H, std::vector<double>&);
   int nc();
   int nr();
